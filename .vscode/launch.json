@@ -1,0 +1,43 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🚀 Start Betweena Server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.js",
+      "restart": true,
+      "runtimeExecutable": "node",
+      "env": {
+        "PORT": "3000",
+        "NODE_ENV": "development",
+        "JWT_SECRET": "betweena-dev-secret-change-in-production"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "🐛 Debug Betweena Server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.js",
+      "env": {
+        "PORT": "3000",
+        "NODE_ENV": "development",
+        "JWT_SECRET": "betweena-dev-secret-change-in-production"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true
+    },
+    {
+      "name": "🔍 Debug Current File",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

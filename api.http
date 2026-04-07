@@ -1,0 +1,215 @@
+### Betweena API Tests
+### Use with VS Code REST Client extension (humao.rest-client)
+### Set @token after login
+
+@baseUrl = http://localhost:3000/api
+@token = PASTE_YOUR_TOKEN_HERE
+
+# ============================================================
+# AUTH
+# ============================================================
+
+### Register new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "first_name": "Kofi",
+  "last_name": "Mensah",
+  "email": "kofi@example.com",
+  "phone": "+233241234567",
+  "password": "mypassword123"
+}
+
+###
+
+### Login (demo account)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@betweena.com",
+  "password": "demo1234"
+}
+
+###
+
+### Get my profile
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+
+###
+
+### Update profile
+PUT {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "first_name": "Kwame",
+  "last_name": "Asante",
+  "phone": "+233201234567"
+}
+
+# ============================================================
+# WALLET
+# ============================================================
+
+###
+
+### Get wallet + history
+GET {{baseUrl}}/wallet
+Authorization: Bearer {{token}}
+
+###
+
+### Deposit funds
+POST {{baseUrl}}/wallet/deposit
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 500,
+  "method": "MTN Mobile Money"
+}
+
+###
+
+### Withdraw funds
+POST {{baseUrl}}/wallet/withdraw
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 100,
+  "method": "MTN Mobile Money",
+  "account_number": "0241234567"
+}
+
+# ============================================================
+# TRANSACTIONS
+# ============================================================
+
+###
+
+### Get all my transactions
+GET {{baseUrl}}/transactions
+Authorization: Bearer {{token}}
+
+###
+
+### Get dashboard stats
+GET {{baseUrl}}/transactions/stats
+Authorization: Bearer {{token}}
+
+###
+
+### Create escrow transaction (as buyer)
+POST {{baseUrl}}/transactions/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "MacBook Pro 14 M3 — Private Sale",
+  "description": "Space Black, 16GB RAM, 512GB SSD. Excellent condition, box included.",
+  "amount": 1450,
+  "category": "electronics",
+  "initiator_role": "buyer",
+  "counterparty_email": "seller@betweena.com",
+  "inspection_days": 3
+}
+
+###
+
+### Create escrow (as seller)
+POST {{baseUrl}}/transactions/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Brand Identity Design Package",
+  "description": "Logo, business card, letterhead, brand guidelines PDF",
+  "amount": 750,
+  "category": "services",
+  "initiator_role": "seller",
+  "inspection_days": 5
+}
+
+###
+
+### Join transaction via code
+POST {{baseUrl}}/transactions/join
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "join_code": "PASTE_JOIN_CODE"
+}
+
+###
+
+### Get single transaction
+GET {{baseUrl}}/transactions/PASTE_TRANSACTION_ID
+Authorization: Bearer {{token}}
+
+###
+
+### Fund escrow (buyer action)
+POST {{baseUrl}}/transactions/PASTE_TRANSACTION_ID/fund
+Authorization: Bearer {{token}}
+
+###
+
+### Mark as shipped (seller action)
+POST {{baseUrl}}/transactions/PASTE_TRANSACTION_ID/ship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tracking_info": "GH-POST-1234567"
+}
+
+###
+
+### Approve & release funds (buyer action)
+POST {{baseUrl}}/transactions/PASTE_TRANSACTION_ID/approve
+Authorization: Bearer {{token}}
+
+###
+
+### Raise a dispute
+POST {{baseUrl}}/transactions/PASTE_TRANSACTION_ID/dispute
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Item received is not as described. The laptop has visible scratches and the battery health is at 61%, not 95% as stated."
+}
+
+###
+
+### Cancel transaction (initiator only, pre-funding)
+POST {{baseUrl}}/transactions/PASTE_TRANSACTION_ID/cancel
+Authorization: Bearer {{token}}
+
+###
+
+### Send message in transaction
+POST {{baseUrl}}/transactions/PASTE_TRANSACTION_ID/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "message": "Hi, I have shipped the item. Please check your tracking info."
+}
+
+###
+
+### Get notifications
+GET {{baseUrl}}/transactions/user/notifications
+Authorization: Bearer {{token}}
+
+###
+
+### Health check
+GET {{baseUrl}}/health

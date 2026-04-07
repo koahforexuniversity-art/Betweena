@@ -1,0 +1,24 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-close-tag",
+    "streetsidesoftware.code-spell-checker",
+    "eamodio.gitlens",
+    "pkief.material-icon-theme",
+    "zhuangtongfa.material-theme",
+    "rangav.vscode-thunder-client",
+    "humao.rest-client",
+    "ritwickdey.liveserver",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.js-debug-nightly",
+    "wix.vscode-import-cost",
+    "naumovs.color-highlight",
+    "mikestead.dotenv",
+    "aaron-bond.better-comments",
+    "visualstudioexptteam.vscodeintellicode",
+    "ms-azuretools.vscode-docker"
+  ]
+}

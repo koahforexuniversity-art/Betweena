@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Betweena — Secure Escrow</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --t: #006B5C; --td: #004D41; --tl: #E8F5F2; --tm: #1D9E75;
+  --g: #F5A623; --gd: #C7860E; --gl: #FFF8EC;
+  --ink: #0F1C19; --ink2: #2B3D39; --m: #637370; --ml: #94A8A4;
+  --s: #F6FAF9; --w: #fff; --bd: rgba(0,107,92,0.12);
+  --r: 12px; --tr: 0.2s;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--s);min-height:100vh;}
+button{cursor:pointer;font-family:'DM Sans',sans-serif;}
+input,select,textarea{font-family:'DM Sans',sans-serif;}
+a{color:inherit;text-decoration:none;}
+
+/* LAYOUT */
+#app{display:flex;min-height:100vh;}
+#sidebar{
+  width:240px;flex-shrink:0;background:var(--ink);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;bottom:0;left:0;z-index:100;
+  transition:transform var(--tr);
+}
+#main-content{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+#topbar{
+  background:var(--w);border-bottom:1px solid var(--bd);
+  padding:0 2rem;height:64px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:50;
+}
+#page{flex:1;padding:2rem;max-width:1100px;width:100%;}
+
+/* SIDEBAR */
+.sb-logo{padding:1.5rem 1.25rem 1rem;font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:#fff;border-bottom:1px solid rgba(255,255,255,0.07);}
+.sb-logo span{color:var(--g);}
+.sb-section{padding:0.75rem 0.75rem 0.25rem;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);}
+.sb-item{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;margin:0.1rem 0.5rem;border-radius:8px;font-size:0.85rem;color:rgba(255,255,255,0.45);transition:all var(--tr);cursor:pointer;}
+.sb-item:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.75);}
+.sb-item.active{background:rgba(0,107,92,0.35);color:#fff;}
+.sb-item .icon{font-size:1rem;width:20px;text-align:center;}
+.sb-badge{margin-left:auto;background:var(--g);color:var(--ink);font-size:0.6rem;font-weight:800;padding:0.1rem 0.4rem;border-radius:100px;}
+.sb-bottom{margin-top:auto;padding:1rem;border-top:1px solid rgba(255,255,255,0.07);}
+.sb-user{display:flex;align-items:center;gap:0.75rem;padding:0.5rem;}
+.sb-avatar{width:34px;height:34px;border-radius:50%;background:rgba(0,107,92,0.4);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0;}
+.sb-name{font-size:0.82rem;color:rgba(255,255,255,0.75);font-weight:500;}
+.sb-email{font-size:0.68rem;color:rgba(255,255,255,0.3);}
+.sb-logout{width:100%;margin-top:0.5rem;padding:0.5rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:rgba(255,255,255,0.4);font-size:0.8rem;transition:all var(--tr);}
+.sb-logout:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);}
+
+/* TOPBAR */
+.tb-left{display:flex;align-items:center;gap:0.75rem;}
+.tb-page-title{font-size:1rem;font-weight:600;}
+.tb-right{display:flex;align-items:center;gap:1rem;}
+.tb-balance{font-size:0.82rem;color:var(--m);}
+.tb-balance strong{color:var(--t);font-weight:700;}
+.btn-topbar{padding:0.45rem 1rem;border-radius:8px;font-size:0.82rem;font-weight:600;border:none;background:var(--t);color:#fff;transition:all var(--tr);}
+.btn-topbar:hover{background:var(--td);}
+.tb-notif{position:relative;width:36px;height:36px;border-radius:50%;background:var(--s);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:0.9rem;cursor:pointer;}
+.notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--g);border:2px solid var(--w);}
+.ham{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:4px;}
+.ham span{display:block;width:20px;height:2px;background:var(--ink);border-radius:2px;}
+
+/* CARDS */
+.card{background:var(--w);border-radius:var(--r);border:1px solid var(--bd);padding:1.5rem;}
+.card-sm{background:var(--w);border-radius:var(--r);border:1px solid var(--bd);padding:1rem 1.25rem;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.6rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:600;border:none;transition:all var(--tr);}
+.btn-primary{background:var(--t);color:#fff;}.btn-primary:hover{background:var(--td);transform:translateY(-1px);}
+.btn-secondary{background:var(--tl);color:var(--t);}.btn-secondary:hover{background:#d1ece6;}
+.btn-ghost{background:transparent;color:var(--m);border:1.5px solid var(--bd);}.btn-ghost:hover{border-color:var(--t);color:var(--t);}
+.btn-danger{background:#FFF0F0;color:#D32F2F;border:1px solid rgba(211,47,47,0.2);}.btn-danger:hover{background:#FFCDD2;}
+.btn-gold{background:var(--g);color:var(--ink);}.btn-gold:hover{background:var(--gd);}
+.btn-sm{padding:0.35rem 0.85rem;font-size:0.78rem;}
+.btn-lg{padding:0.8rem 2rem;font-size:1rem;}
+.btn-full{width:100%;justify-content:center;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important;}
+
+/* FORMS */
+.form-group{margin-bottom:1rem;}
+.form-label{display:block;font-size:0.78rem;font-weight:600;color:var(--ink2);margin-bottom:0.35rem;}
+.form-input{width:100%;padding:0.65rem 0.9rem;border-radius:8px;border:1.5px solid var(--bd);font-size:0.9rem;outline:none;transition:border var(--tr);color:var(--ink);background:var(--w);}
+.form-input:focus{border-color:var(--t);}
+.form-input.error{border-color:#D32F2F;}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23637370' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.9rem center;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-hint{font-size:0.72rem;color:var(--m);margin-top:0.25rem;}
+.form-error{font-size:0.72rem;color:#D32F2F;margin-top:0.25rem;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.65rem;border-radius:100px;font-size:0.7rem;font-weight:700;}
+.badge::before{content:'●';font-size:0.5rem;}
+.badge-draft{background:#F5F5F5;color:#9E9E9E;}
+.badge-awaiting_counterparty{background:#FFF9E6;color:#F9A825;}
+.badge-awaiting_funding{background:#E3F2FD;color:#1565C0;}
+.badge-funded{background:#E8F5E9;color:#2E7D32;}
+.badge-shipped{background:#E8EAF6;color:#283593;}
+.badge-delivered{background:#E0F7FA;color:#006064;}
+.badge-completed{background:#E8F5F2;color:var(--t);}
+.badge-disputed{background:#FFEBEE;color:#C62828;}
+.badge-cancelled{background:#FAFAFA;color:#9E9E9E;}
+
+/* METRICS */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+.metric-card{background:var(--w);border:1px solid var(--bd);border-radius:var(--r);padding:1.1rem 1.25rem;}
+.metric-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ml);margin-bottom:0.35rem;}
+.metric-value{font-size:1.6rem;font-weight:700;color:var(--ink);font-family:'Playfair Display',serif;}
+.metric-sub{font-size:0.72rem;color:var(--m);margin-top:0.2rem;}
+
+/* TRANSACTION LIST */
+.tx-list{display:flex;flex-direction:column;gap:0;}
+.tx-item{display:grid;grid-template-columns:1fr auto;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--bd);cursor:pointer;transition:background var(--tr);}
+.tx-item:last-child{border-bottom:none;}
+.tx-item:hover{background:var(--s);}
+.tx-item-left{display:flex;align-items:center;gap:0.9rem;}
+.tx-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.tx-title{font-size:0.9rem;font-weight:600;margin-bottom:0.15rem;}
+.tx-meta{font-size:0.75rem;color:var(--m);}
+.tx-amount{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;text-align:right;}
+.tx-status-wrap{text-align:right;margin-top:0.25rem;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,28,25,0.6);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;animation:fadeIn .15s ease;}
+.modal{background:var(--w);border-radius:16px;padding:2rem;width:min(520px,92vw);max-height:90vh;overflow-y:auto;animation:slideUp .2s ease;}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;}
+.modal-close{width:30px;height:30px;border-radius:50%;background:var(--s);border:none;font-size:1rem;color:var(--m);display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--tl);color:var(--t);}
+
+/* AUTH */
+#auth-page{display:none;min-height:100vh;background:linear-gradient(135deg,var(--w) 0%,var(--tl) 100%);align-items:center;justify-content:center;}
+.auth-box{background:var(--w);border-radius:20px;padding:2.5rem;width:min(420px,92vw);box-shadow:0 20px 60px rgba(0,107,92,0.1);border:1px solid var(--bd);}
+.auth-logo{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--t);text-align:center;margin-bottom:0.25rem;}
+.auth-logo span{color:var(--g);}
+.auth-sub{text-align:center;font-size:0.85rem;color:var(--m);margin-bottom:2rem;}
+.auth-tabs{display:flex;gap:0.25rem;background:var(--s);border-radius:10px;padding:0.25rem;margin-bottom:1.5rem;}
+.auth-tab{flex:1;padding:0.5rem;border-radius:8px;border:none;font-size:0.875rem;font-weight:600;background:transparent;color:var(--m);transition:all var(--tr);}
+.auth-tab.active{background:var(--w);color:var(--t);box-shadow:0 2px 8px rgba(0,107,92,0.1);}
+.auth-divider{text-align:center;font-size:0.75rem;color:var(--ml);margin:1rem 0;position:relative;}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:35%;height:1px;background:var(--bd);}
+.auth-divider::before{left:0;}.auth-divider::after{right:0;}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;}
+.toast{background:var(--ink);color:#fff;padding:0.75rem 1.25rem;border-radius:10px;font-size:0.85rem;font-weight:500;display:flex;align-items:center;gap:0.6rem;animation:slideInRight .3s ease;max-width:340px;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+.toast.success{background:#1B5E20;}.toast.error{background:#B71C1C;}.toast.warning{background:#E65100;}
+.toast-icon{font-size:1rem;flex-shrink:0;}
+
+/* PAGE HEADERS */
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem;}
+.page-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;}
+.page-sub{font-size:0.85rem;color:var(--m);margin-top:0.25rem;}
+
+/* TRANSACTION DETAIL */
+.tx-detail-header{background:var(--t);color:#fff;border-radius:var(--r);padding:1.75rem;margin-bottom:1.5rem;}
+.tx-detail-amount{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:700;}
+.tx-detail-title{font-size:0.85rem;opacity:0.7;margin-top:0.25rem;}
+.progress-track{display:flex;align-items:center;gap:0;margin:1.5rem 0;overflow-x:auto;}
+.prog-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:70px;}
+.prog-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;border:2px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.5);background:transparent;margin-bottom:0.35rem;}
+.prog-dot.done{background:var(--tm);border-color:var(--tm);color:#fff;}
+.prog-dot.active{background:var(--g);border-color:var(--g);color:var(--ink);}
+.prog-line{flex:1;height:2px;background:rgba(255,255,255,0.15);margin-bottom:20px;}
+.prog-line.done{background:var(--tm);}
+.prog-label{font-size:0.6rem;color:rgba(255,255,255,0.5);text-align:center;font-weight:500;}
+.prog-label.done{color:rgba(255,255,255,0.8);}
+.prog-label.active{color:var(--g);font-weight:700;}
+
+/* PARTIES */
+.parties-card{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;padding:1rem;background:var(--s);border-radius:10px;margin:1rem 0;}
+.party-block{display:flex;align-items:center;gap:0.75rem;}
+.party-block.right{flex-direction:row-reverse;text-align:right;}
+.p-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0;}
+.p-name{font-size:0.88rem;font-weight:600;}
+.p-role{font-size:0.72rem;color:var(--m);}
+.p-arrow{font-size:1.5rem;color:var(--ml);}
+
+/* MESSAGES */
+.messages-box{height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:0.75rem;padding:1rem;background:var(--s);border-radius:10px;margin-bottom:0.75rem;}
+.msg{display:flex;flex-direction:column;max-width:70%;}
+.msg.mine{align-self:flex-end;align-items:flex-end;}
+.msg.theirs{align-self:flex-start;}
+.msg-bubble{padding:0.6rem 0.9rem;border-radius:12px;font-size:0.85rem;line-height:1.5;}
+.msg.mine .msg-bubble{background:var(--t);color:#fff;border-bottom-right-radius:3px;}
+.msg.theirs .msg-bubble{background:var(--w);color:var(--ink);border:1px solid var(--bd);border-bottom-left-radius:3px;}
+.msg-meta{font-size:0.65rem;color:var(--ml);margin-top:0.2rem;}
+.msg-input-row{display:flex;gap:0.5rem;}
+
+/* WALLET */
+.wallet-hero{background:linear-gradient(135deg,var(--t),var(--tm));color:#fff;border-radius:16px;padding:2rem;margin-bottom:1.5rem;}
+.wallet-bal-label{font-size:0.78rem;opacity:0.7;margin-bottom:0.35rem;}
+.wallet-bal{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:700;}
+.wallet-actions{display:flex;gap:0.75rem;margin-top:1.25rem;}
+.btn-wallet-action{padding:0.55rem 1.25rem;border-radius:8px;font-size:0.85rem;font-weight:600;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;transition:all var(--tr);}
+.btn-wallet-action:hover{background:rgba(255,255,255,0.2);}
+
+/* NOTIF */
+.notif-item{padding:1rem 1.25rem;border-bottom:1px solid var(--bd);display:flex;gap:0.9rem;align-items:flex-start;}
+.notif-item:last-child{border-bottom:none;}
+.notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.notif-title{font-size:0.88rem;font-weight:600;margin-bottom:0.2rem;}
+.notif-msg{font-size:0.8rem;color:var(--m);}
+.notif-time{font-size:0.68rem;color:var(--ml);margin-top:0.2rem;}
+.notif-unread{background:rgba(245,166,35,0.08);border-left:3px solid var(--g);}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:4rem 2rem;}
+.empty-icon{font-size:3rem;margin-bottom:1rem;}
+.empty-title{font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;}
+.empty-sub{font-size:0.85rem;color:var(--m);}
+
+/* SPINNER */
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+.spinner-dark{border-color:rgba(0,107,92,0.2);border-top-color:var(--t);}
+
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes slideInRight{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:var(--w);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:1rem;}
+.loading-logo{font-family:'Playfair Display',serif;font-size:2rem;color:var(--t);font-weight:700;}
+.loading-logo span{color:var(--g);}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  #sidebar{transform:translateX(-100%);}
+  #sidebar.open{transform:translateX(0);}
+  #main-content{margin-left:0;}
+  .ham{display:flex;}
+  .metrics-grid{grid-template-columns:repeat(2,1fr);}
+  .form-row{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  #page{padding:1rem;}
+  .parties-card{grid-template-columns:1fr;}
+  .p-arrow{display:none;}
+}
+
+/* JOIN CODE display */
+.join-code-display{
+  font-family:monospace;font-size:1.5rem;font-weight:800;letter-spacing:0.2em;
+  color:var(--t);background:var(--tl);border:2px dashed var(--t);
+  border-radius:10px;padding:0.75rem 1.5rem;text-align:center;
+  cursor:pointer;user-select:all;transition:all var(--tr);
+}
+.join-code-display:hover{background:#d1ece6;}
+
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.section-title-sm{font-size:0.9rem;font-weight:700;color:var(--ink2);}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-logo">Between<span>a</span></div>
+  <div class="spinner spinner-dark"></div>
+</div>
+
+<!-- AUTH PAGE -->
+<div id="auth-page">
+  <div class="auth-box">
+    <div class="auth-logo">Between<span>a</span></div>
+    <div class="auth-sub">Secure escrow for the digital economy</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Create Account</button>
+    </div>
+    <div id="auth-form"></div>
+    <div class="auth-divider">demo credentials</div>
+    <div style="text-align:center;font-size:0.78rem;color:var(--m);">demo@betweena.com / <strong>demo1234</strong></div>
+  </div>
+</div>
+
+<!-- APP LAYOUT -->
+<div id="app" style="display:none;">
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sb-logo">Between<span>a</span></div>
+    <div class="sb-section">Menu</div>
+    <div class="sb-item active" data-page="dashboard"><span class="icon">⊞</span>Dashboard</div>
+    <div class="sb-item" data-page="transactions"><span class="icon">↔</span>Transactions<span class="sb-badge" id="active-badge" style="display:none">0</span></div>
+    <div class="sb-item" data-page="new-transaction"><span class="icon">＋</span>New Escrow</div>
+    <div class="sb-item" data-page="join"><span class="icon">🔑</span>Join with Code</div>
+    <div class="sb-section">Account</div>
+    <div class="sb-item" data-page="wallet"><span class="icon">💳</span>Wallet</div>
+    <div class="sb-item" data-page="notifications"><span class="icon">🔔</span>Notifications<span class="sb-badge" id="notif-badge" style="display:none">0</span></div>
+    <div class="sb-item" data-page="profile"><span class="icon">👤</span>Profile</div>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sb-avatar">?</div>
+        <div><div class="sb-name" id="sb-name">Loading...</div><div class="sb-email" id="sb-email"></div></div>
+      </div>
+      <button class="sb-logout" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main-content">
+    <div id="topbar">
+      <div class="tb-left">
+        <div class="ham" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
+        <div class="tb-page-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-balance">Balance: <strong id="tb-balance">$0.00</strong></div>
+        <button class="btn-topbar" onclick="navigate('new-transaction')">+ New Escrow</button>
+        <div class="tb-notif" onclick="navigate('notifications')">
+          🔔<div class="notif-dot" id="notif-dot" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+    <div id="page"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ============= STATE =============
+const API = '';
+let token = localStorage.getItem('bt_token');
+let user = JSON.parse(localStorage.getItem('bt_user') || 'null');
+let currentPage = 'dashboard';
+let transactionsCache = [];
+let statsCache = {};
+
+// ============= API =============
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + '/api' + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ============= AUTH =============
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login')||(i===1 && tab==='register')));
+  renderAuthForm(tab);
+}
+
+function renderAuthForm(tab) {
+  const el = document.getElementById('auth-form');
+  if (tab === 'login') {
+    el.innerHTML = `
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="a-email" type="email" placeholder="you@example.com"></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="a-pass" type="password" placeholder="••••••••"></div>
+      <div id="a-err" class="form-error" style="margin-bottom:0.75rem;display:none;"></div>
+      <button class="btn btn-primary btn-full btn-lg" id="a-btn" onclick="doLogin()">Log In →</button>`;
+    document.getElementById('a-email').addEventListener('keydown', e => e.key==='Enter' && doLogin());
+    document.getElementById('a-pass').addEventListener('keydown', e => e.key==='Enter' && doLogin());
+  } else {
+    el.innerHTML = `
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First name</label><input class="form-input" id="a-fn" type="text" placeholder="Kwame"></div>
+        <div class="form-group"><label class="form-label">Last name</label><input class="form-input" id="a-ln" type="text" placeholder="Asante"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="a-email" type="email" placeholder="you@example.com"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="a-phone" type="tel" placeholder="+233 XX XXX XXXX"></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="a-pass" type="password" placeholder="Min 6 characters"></div>
+      <div id="a-err" class="form-error" style="margin-bottom:0.75rem;display:none;"></div>
+      <button class="btn btn-primary btn-full btn-lg" id="a-btn" onclick="doRegister()">Create Account →</button>`;
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('a-email').value.trim();
+  const password = document.getElementById('a-pass').value;
+  const errEl = document.getElementById('a-err');
+  const btn = document.getElementById('a-btn');
+  if (!email || !password) { showError('a-err', 'All fields required'); return; }
+  btn.innerHTML = '<span class="spinner"></span> Logging in...'; btn.disabled = true;
+  try {
+    const data = await api('POST', '/auth/login', { email, password });
+    setSession(data); showApp();
+  } catch(e) { showError('a-err', e.message); btn.innerHTML = 'Log In →'; btn.disabled = false; }
+}
+
+async function doRegister() {
+  const first_name = document.getElementById('a-fn').value.trim();
+  const last_name = document.getElementById('a-ln').value.trim();
+  const email = document.getElementById('a-email').value.trim();
+  const phone = document.getElementById('a-phone')?.value.trim();
+  const password = document.getElementById('a-pass').value;
+  const btn = document.getElementById('a-btn');
+  if (!first_name || !last_name || !email || !password) { showError('a-err', 'All fields required'); return; }
+  btn.innerHTML = '<span class="spinner"></span> Creating...'; btn.disabled = true;
+  try {
+    const data = await api('POST', '/auth/register', { first_name, last_name, email, phone, password });
+    setSession(data); showApp();
+  } catch(e) { showError('a-err', e.message); btn.innerHTML = 'Create Account →'; btn.disabled = false; }
+}
+
+function setSession(data) {
+  token = data.token; user = data.user;
+  localStorage.setItem('bt_token', token);
+  localStorage.setItem('bt_user', JSON.stringify(user));
+}
+
+function logout() {
+  token = null; user = null;
+  localStorage.removeItem('bt_token'); localStorage.removeItem('bt_user');
+  showAuth();
+}
+
+function showAuth() {
+  document.getElementById('app').style.display = 'none';
+  const ap = document.getElementById('auth-page'); ap.style.display = 'flex';
+  renderAuthForm('login');
+}
+
+function showApp() {
+  document.getElementById('auth-page').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  updateSidebarUser();
+  navigate('dashboard');
+}
+
+// ============= NAV =============
+function navigate(page, data) {
+  currentPage = page;
+  document.querySelectorAll('.sb-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+  const titles = { dashboard:'Dashboard', transactions:'My Transactions', 'new-transaction':'New Escrow Transaction', join:'Join Transaction', wallet:'Wallet', notifications:'Notifications', profile:'Profile', 'transaction-detail':'Transaction Details' };
+  document.getElementById('topbar-title').textContent = titles[page] || 'Betweena';
+  const pageEl = document.getElementById('page');
+  pageEl.innerHTML = '<div style="display:flex;justify-content:center;padding:3rem"><div class="spinner spinner-dark"></div></div>';
+  const pages = { dashboard: renderDashboard, transactions: renderTransactions, 'new-transaction': renderNewTransaction, join: renderJoin, wallet: renderWallet, notifications: renderNotifications, profile: renderProfile, 'transaction-detail': () => renderTransactionDetail(data) };
+  if (pages[page]) pages[page]();
+  else pageEl.innerHTML = '<div class="empty"><div class="empty-icon">🚧</div><div class="empty-title">Coming Soon</div></div>';
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+function updateSidebarUser() {
+  if (!user) return;
+  const initials = `${user.first_name?.[0]||''}${user.last_name?.[0]||''}`.toUpperCase();
+  document.getElementById('sb-avatar').textContent = initials;
+  document.getElementById('sb-name').textContent = `${user.first_name} ${user.last_name}`;
+  document.getElementById('sb-email').textContent = user.email;
+  document.getElementById('tb-balance').textContent = `$${(user.wallet_balance||0).toFixed(2)}`;
+  if (user.unread_count > 0) {
+    document.getElementById('notif-badge').style.display = '';
+    document.getElementById('notif-badge').textContent = user.unread_count;
+    document.getElementById('notif-dot').style.display = '';
+  }
+}
+
+function refreshUser() {
+  api('GET', '/auth/profile').then(u => { user = u; localStorage.setItem('bt_user', JSON.stringify(u)); updateSidebarUser(); }).catch(()=>{});
+}
+
+// ============= DASHBOARD =============
+async function renderDashboard() {
+  try {
+    const [stats, txns] = await Promise.all([
+      api('GET', '/transactions/stats'),
+      api('GET', '/transactions')
+    ]);
+    statsCache = stats; transactionsCache = txns;
+    const active = txns.filter(t => !['completed','cancelled'].includes(t.status));
+    if (active.length) { document.getElementById('active-badge').style.display=''; document.getElementById('active-badge').textContent = active.length; }
+
+    document.getElementById('page').innerHTML = `
+      <div class="page-header">
+        <div><div class="page-title">Good day, ${user?.first_name || 'there'} 👋</div><div class="page-sub">Here's your escrow overview.</div></div>
+        <button class="btn btn-primary" onclick="navigate('new-transaction')">+ New Escrow</button>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">In Escrow</div>
+          <div class="metric-value">$${stats.in_escrow.toFixed(2)}</div>
+          <div class="metric-sub">${stats.active_count} active transaction${stats.active_count!==1?'s':''}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total Released</div>
+          <div class="metric-value">$${stats.total_released.toFixed(2)}</div>
+          <div class="metric-sub">Completed successfully</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Wallet Balance</div>
+          <div class="metric-value">$${(user?.wallet_balance||0).toFixed(2)}</div>
+          <div class="metric-sub"><a href="#" onclick="navigate('wallet')" style="color:var(--t);font-weight:600;">Add funds →</a></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Disputes</div>
+          <div class="metric-value" style="color:${stats.dispute_count>0?'#C62828':'var(--ink)'}">${stats.dispute_count}</div>
+          <div class="metric-sub">${stats.dispute_count>0?'<span style="color:#C62828">Needs attention</span>':'All clear ✓'}</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="section-header">
+          <div class="section-title-sm">Recent Transactions</div>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('transactions')">View all</button>
+        </div>
+        ${txns.length === 0 ? `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div><div class="empty-sub">Create your first escrow to get started</div><button class="btn btn-primary" style="margin-top:1rem;" onclick="navigate('new-transaction')">Create Escrow</button></div>` :
+        `<div class="tx-list">${txns.slice(0,5).map(renderTxRow).join('')}</div>`}
+      </div>
+      ${txns.filter(t=>t.status==='awaiting_counterparty').length>0?`
+      <div class="card" style="background:var(--gl);border-color:rgba(245,166,35,0.3);">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div style="font-size:1.5rem;">🔑</div>
+          <div>
+            <div style="font-weight:700;margin-bottom:0.2rem;">Waiting for counterparty</div>
+            <div style="font-size:0.82rem;color:var(--m);">Share your join code so the other party can join your escrow.</div>
+          </div>
+          <button class="btn btn-gold" style="margin-left:auto;" onclick="navigate('transactions')">View codes</button>
+        </div>
+      </div>` : ''}
+    `;
+  } catch(e) { document.getElementById('page').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error loading dashboard</div><div class="empty-sub">${e.message}</div></div>`; }
+}
+
+function renderTxRow(tx) {
+  const icons = { goods:'📦', electronics:'📱', vehicles:'🚗', services:'🎨', 'real-estate':'🏠', other:'📄' };
+  const icon = icons[tx.category] || '📄';
+  const colors = { goods:'#E3F2FD', electronics:'#E8EAF6', vehicles:'#FFF3E0', services:'#F3E5F5', 'real-estate':'#E8F5E9' };
+  const myRole = tx.initiator_id === user?.id ? (tx.initiator_role) : (tx.initiator_role === 'buyer' ? 'seller' : 'buyer');
+  return `<div class="tx-item" onclick="navigate('transaction-detail','${tx.id}')">
+    <div class="tx-item-left">
+      <div class="tx-icon" style="background:${colors[tx.category]||'#F5F5F5'}">${icon}</div>
+      <div>
+        <div class="tx-title">${tx.title}</div>
+        <div class="tx-meta">${new Date(tx.created_at).toLocaleDateString()} · As ${myRole}</div>
+      </div>
+    </div>
+    <div>
+      <div class="tx-amount">$${tx.amount.toFixed(2)}</div>
+      <div class="tx-status-wrap"><span class="badge badge-${tx.status}">${statusLabel(tx.status)}</span></div>
+    </div>
+  </div>`;
+}
+
+function statusLabel(s) {
+  return { draft:'Draft', awaiting_counterparty:'Awaiting Party', awaiting_funding:'Awaiting Funds', funded:'Funded', shipped:'Shipped', delivered:'Delivered', completed:'Completed', disputed:'In Dispute', cancelled:'Cancelled' }[s] || s;
+}
+
+// ============= TRANSACTIONS =============
+async function renderTransactions() {
+  try {
+    const txns = await api('GET', '/transactions');
+    transactionsCache = txns;
+    document.getElementById('page').innerHTML = `
+      <div class="page-header">
+        <div><div class="page-title">My Transactions</div><div class="page-sub">${txns.length} total transaction${txns.length!==1?'s':''}</div></div>
+        <button class="btn btn-primary" onclick="navigate('new-transaction')">+ New Escrow</button>
+      </div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        ${['all','active','completed','disputed'].map(f=>`<button class="btn btn-ghost btn-sm" id="filter-${f}" onclick="filterTx('${f}')" style="${f==='all'?'background:var(--tl);color:var(--t);border-color:var(--t);':''}">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+      </div>
+      <div class="card" style="padding:0;">
+        ${txns.length === 0 ? `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div><button class="btn btn-primary" style="margin-top:1rem;" onclick="navigate('new-transaction')">Create your first escrow</button></div>` :
+        `<div class="tx-list" id="tx-list">${txns.map(renderTxRow).join('')}</div>`}
+      </div>`;
+    window._allTxns = txns;
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function filterTx(f) {
+  const txns = window._allTxns || [];
+  const filtered = f==='all' ? txns : f==='active' ? txns.filter(t=>!['completed','cancelled'].includes(t.status)) : txns.filter(t=>t.status===f);
+  document.getElementById('tx-list').innerHTML = filtered.length ? filtered.map(renderTxRow).join('') : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No ${f} transactions</div></div>`;
+  document.querySelectorAll('[id^=filter-]').forEach(b => b.style.cssText = '');
+  const active = document.getElementById(`filter-${f}`);
+  if (active) active.style.cssText = 'background:var(--tl);color:var(--t);border-color:var(--t);';
+}
+
+// ============= TRANSACTION DETAIL =============
+async function renderTransactionDetail(txId) {
+  if (!txId) { navigate('transactions'); return; }
+  try {
+    const tx = await api('GET', `/transactions/${txId}`);
+    const myRole = tx.initiator_id === user?.id ? tx.initiator_role : (tx.initiator_role === 'buyer' ? 'seller' : 'buyer');
+    const buyer = tx.initiator_role === 'buyer' ? tx.initiator : tx.counterparty;
+    const seller = tx.initiator_role === 'seller' ? tx.initiator : tx.counterparty;
+    const steps = ['awaiting_funding','funded','shipped','delivered','completed'];
+    const stepIdx = { awaiting_counterparty:-1, awaiting_funding:0, funded:1, shipped:2, delivered:3, completed:4, disputed:-1, cancelled:-1 };
+    const si = stepIdx[tx.status] ?? 0;
+
+    const actionBtns = getActionButtons(tx, myRole);
+
+    document.getElementById('page').innerHTML = `
+      <button class="btn btn-ghost btn-sm" style="margin-bottom:1rem;" onclick="navigate('transactions')">← Back</button>
+      <div class="tx-detail-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <div class="tx-detail-amount">$${tx.amount.toFixed(2)}</div>
+            <div class="tx-detail-title">${tx.title}</div>
+            <div style="margin-top:0.75rem;"><span class="badge badge-${tx.status}" style="font-size:0.78rem;">${statusLabel(tx.status)}</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.72rem;opacity:0.6;margin-bottom:0.25rem;">Join Code</div>
+            <div style="font-family:monospace;font-size:1rem;font-weight:800;letter-spacing:0.15em;background:rgba(255,255,255,0.15);padding:0.4rem 0.8rem;border-radius:8px;cursor:pointer;" onclick="copyCode('${tx.join_code}')">${tx.join_code}</div>
+          </div>
+        </div>
+        ${!['completed','cancelled','disputed'].includes(tx.status) ? `
+        <div class="progress-track" style="margin-top:1.5rem;">
+          ${steps.map((s,i) => `
+            ${i>0?`<div class="prog-line ${si>=i?'done':''}"></div>`:''}
+            <div class="prog-step">
+              <div class="prog-dot ${si>i?'done':si===i?'active':''}">${si>i?'✓':i+1}</div>
+              <div class="prog-label ${si>i?'done':si===i?'active':''}">${['Fund','Funded','Shipped','Delivered','Complete'][i]}</div>
+            </div>`).join('')}
+        </div>` : ''}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+        <div class="card">
+          <div class="section-title-sm" style="margin-bottom:1rem;">Transaction Details</div>
+          ${row('Category', tx.category || 'Goods')}
+          ${row('Your Role', myRole.charAt(0).toUpperCase()+myRole.slice(1))}
+          ${row('Platform Fee', `$${(tx.fee_amount||0).toFixed(2)} (${((tx.fee_rate||0)*100).toFixed(1)}%)`)}
+          ${row('Total Cost', myRole==='buyer'?`$${(tx.amount+(tx.fee_amount||0)).toFixed(2)}`:tx.amount.toFixed(2))}
+          ${row('Inspection Window', `${tx.inspection_days} days`)}
+          ${row('Created', new Date(tx.created_at).toLocaleDateString())}
+          ${tx.funded_at?row('Funded',new Date(tx.funded_at).toLocaleDateString()):''}
+          ${tx.shipped_at?row('Shipped',new Date(tx.shipped_at).toLocaleDateString()):''}
+          ${tx.completed_at?row('Completed',new Date(tx.completed_at).toLocaleDateString()):''}
+          ${tx.tracking_info?row('Tracking',tx.tracking_info):''}
+          ${tx.description?`<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--bd);font-size:0.82rem;color:var(--m);">${tx.description}</div>`:''}
+        </div>
+        <div class="card">
+          <div class="section-title-sm" style="margin-bottom:1rem;">Parties</div>
+          <div style="margin-bottom:1rem;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ml);margin-bottom:0.4rem;">BUYER</div>
+            ${buyer ? `<div style="display:flex;align-items:center;gap:0.65rem;"><div class="p-avatar" style="background:#E8F5F2;color:var(--t);">${initials(buyer)}</div><div><div style="font-weight:600;font-size:0.88rem;">${buyer.first_name} ${buyer.last_name}</div><div style="font-size:0.75rem;color:var(--m);">${buyer.email}</div></div></div>` : `<div style="font-size:0.85rem;color:var(--m);">Not yet joined</div>`}
+          </div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ml);margin-bottom:0.4rem;">SELLER</div>
+            ${seller ? `<div style="display:flex;align-items:center;gap:0.65rem;"><div class="p-avatar" style="background:#FFF3E0;color:#E67E22;">${initials(seller)}</div><div><div style="font-weight:600;font-size:0.88rem;">${seller.first_name} ${seller.last_name}</div><div style="font-size:0.75rem;color:var(--m);">${seller.email}</div></div></div>` : `<div style="font-size:0.85rem;color:var(--m);">Not yet joined</div>`}
+          </div>
+          ${actionBtns ? `<div style="border-top:1px solid var(--bd);margin-top:1.25rem;padding-top:1.25rem;display:flex;flex-direction:column;gap:0.5rem;">${actionBtns}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-sm" style="margin-bottom:0.75rem;">Transaction Messages</div>
+        <div class="messages-box" id="messages-box">
+          ${tx.messages && tx.messages.length ? tx.messages.map(m => `
+            <div class="msg ${m.sender_id===user?.id?'mine':'theirs'}">
+              <div class="msg-bubble">${escHtml(m.message)}</div>
+              <div class="msg-meta">${m.first_name} · ${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+            </div>`).join('') : `<div style="text-align:center;color:var(--ml);font-size:0.82rem;margin:auto;">No messages yet. Start the conversation.</div>`}
+        </div>
+        <div class="msg-input-row">
+          <input class="form-input" id="msg-input" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMsg('${tx.id}')">
+          <button class="btn btn-primary" onclick="sendMsg('${tx.id}')">Send</button>
+        </div>
+      </div>
+
+      ${tx.status === 'awaiting_counterparty' ? `
+      <div class="card" style="margin-top:1.5rem;background:var(--gl);border-color:rgba(245,166,35,0.3);">
+        <div style="font-weight:700;margin-bottom:0.5rem;">Share Join Code</div>
+        <div class="join-code-display" onclick="copyCode('${tx.join_code}')">${tx.join_code}</div>
+        <div style="font-size:0.78rem;color:var(--m);margin-top:0.5rem;text-align:center;">Click to copy. Share with the other party so they can join.</div>
+      </div>` : ''}
+    `;
+    // Scroll messages to bottom
+    const mb = document.getElementById('messages-box');
+    if (mb) mb.scrollTop = mb.scrollHeight;
+  } catch(e) { document.getElementById('page').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error: ${e.message}</div></div>`; }
+}
+
+function getActionButtons(tx, myRole) {
+  const btns = [];
+  if (tx.status === 'awaiting_funding' && myRole === 'buyer') {
+    btns.push(`<button class="btn btn-primary" onclick="doFund('${tx.id}',${tx.amount},${tx.fee_amount||0})">💳 Fund Escrow ($${(tx.amount+(tx.fee_amount||0)).toFixed(2)})</button>`);
+  }
+  if (tx.status === 'funded' && myRole === 'seller') {
+    btns.push(`<button class="btn btn-primary" onclick="openShipModal('${tx.id}')">📦 Mark as Shipped</button>`);
+  }
+  if (['funded','shipped'].includes(tx.status) && myRole === 'buyer') {
+    btns.push(`<button class="btn btn-primary" onclick="doApprove('${tx.id}','${tx.title}',${tx.amount})">✅ Approve & Release ($${tx.amount.toFixed(2)})</button>`);
+    btns.push(`<button class="btn btn-danger" onclick="openDisputeModal('${tx.id}')">⚠️ Raise Dispute</button>`);
+  }
+  if (['funded','shipped'].includes(tx.status) && myRole === 'seller') {
+    btns.push(`<button class="btn btn-danger" onclick="openDisputeModal('${tx.id}')">⚠️ Raise Dispute</button>`);
+  }
+  if (['awaiting_counterparty','awaiting_funding'].includes(tx.status) && tx.initiator_id === user?.id) {
+    btns.push(`<button class="btn btn-ghost" onclick="doCancel('${tx.id}')">✕ Cancel Transaction</button>`);
+  }
+  return btns.join('');
+}
+
+function row(label, val) {
+  return `<div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--bd);font-size:0.82rem;"><span style="color:var(--m);">${label}</span><span style="font-weight:500;">${val}</span></div>`;
+}
+function initials(u) { return u ? `${u.first_name?.[0]||''}${u.last_name?.[0]||''}`.toUpperCase() : '?'; }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function copyCode(code) { navigator.clipboard?.writeText(code); showToast('Join code copied!', 'success'); }
+
+async function sendMsg(txId) {
+  const inp = document.getElementById('msg-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  try {
+    const m = await api('POST', `/transactions/${txId}/messages`, { message: msg });
+    const box = document.getElementById('messages-box');
+    if (box) {
+      const placeholder = box.querySelector('[style*="No messages"]');
+      if (placeholder) placeholder.remove();
+      box.innerHTML += `<div class="msg mine"><div class="msg-bubble">${escHtml(m.message)}</div><div class="msg-meta">You · just now</div></div>`;
+      box.scrollTop = box.scrollHeight;
+    }
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function doFund(txId, amount, fee) {
+  const total = (amount + fee).toFixed(2);
+  const bal = user?.wallet_balance || 0;
+  if (bal < (amount + fee)) {
+    showToast(`Insufficient balance. You need $${total}. Add funds to your wallet.`, 'error');
+    navigate('wallet'); return;
+  }
+  if (!confirm(`Fund escrow: $${amount.toFixed(2)} + $${fee.toFixed(2)} fee = $${total} will be deducted from your wallet.`)) return;
+  try {
+    await api('POST', `/transactions/${txId}/fund`);
+    showToast('Escrow funded! Funds are now held securely.', 'success');
+    refreshUser(); navigate('transaction-detail', txId);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function doApprove(txId, title, amount) {
+  if (!confirm(`Approve and release $${parseFloat(amount).toFixed(2)} to the seller for "${title}"? This cannot be undone.`)) return;
+  try {
+    await api('POST', `/transactions/${txId}/approve`);
+    showToast('✅ Payment released! Transaction complete.', 'success');
+    refreshUser(); navigate('transaction-detail', txId);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function doCancel(txId) {
+  if (!confirm('Cancel this transaction?')) return;
+  try {
+    await api('POST', `/transactions/${txId}/cancel`);
+    showToast('Transaction cancelled.'); navigate('transactions');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function openShipModal(txId) {
+  openModal('Mark as Shipped', `
+    <div class="form-group">
+      <label class="form-label">Tracking Number / Info (optional)</label>
+      <input class="form-input" id="track-inp" placeholder="e.g. GH-POST-1234567 or 'Delivered in person'">
+    </div>
+    <div class="form-hint" style="margin-bottom:1rem;">This will notify the buyer to inspect and approve.</div>
+    <button class="btn btn-primary btn-full" onclick="doShip('${txId}')">Confirm Shipment ✓</button>`);
+}
+async function doShip(txId) {
+  const tracking = document.getElementById('track-inp')?.value;
+  try {
+    await api('POST', `/transactions/${txId}/ship`, { tracking_info: tracking });
+    showToast('📦 Marked as shipped! Buyer will be notified.', 'success');
+    closeModal(); navigate('transaction-detail', txId);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function openDisputeModal(txId) {
+  openModal('Raise a Dispute', `
+    <div style="background:#FFEBEE;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:#C62828;">
+      ⚠️ Raising a dispute will freeze the transaction. Our team will review and contact both parties within 48 hours.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reason for dispute *</label>
+      <textarea class="form-input" id="dispute-reason" rows="4" placeholder="Describe the issue clearly. Include any relevant details..."></textarea>
+    </div>
+    <button class="btn btn-danger btn-full" onclick="doDispute('${txId}')">Submit Dispute</button>`);
+}
+async function doDispute(txId) {
+  const reason = document.getElementById('dispute-reason')?.value.trim();
+  if (!reason) { showToast('Please provide a reason', 'error'); return; }
+  try {
+    await api('POST', `/transactions/${txId}/dispute`, { reason });
+    showToast('⚠️ Dispute raised. We will review within 48 hours.', 'warning');
+    closeModal(); navigate('transaction-detail', txId);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ============= NEW TRANSACTION =============
+function renderNewTransaction() {
+  document.getElementById('page').innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">Create New Escrow</div><div class="page-sub">Set up a secure transaction with any party.</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start;">
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Transaction Title *</label>
+          <input class="form-input" id="nt-title" placeholder="e.g. iPhone 15 Pro — Private Sale">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-input" id="nt-desc" rows="3" placeholder="Describe what is being sold or the service being rendered..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount (USD) *</label>
+            <input class="form-input" id="nt-amount" type="number" min="1" max="500000" placeholder="0.00" oninput="calcFeePreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input form-select" id="nt-cat">
+              <option value="goods">Physical Goods</option>
+              <option value="electronics">Electronics</option>
+              <option value="vehicles">Vehicles</option>
+              <option value="services">Services / Freelance</option>
+              <option value="real-estate">Real Estate Deposit</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Your Role *</label>
+            <select class="form-input form-select" id="nt-role">
+              <option value="buyer">Buyer (I'm paying)</option>
+              <option value="seller">Seller (I'm receiving)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Inspection Window</label>
+            <select class="form-input form-select" id="nt-inspect">
+              <option value="1">1 day</option>
+              <option value="3" selected>3 days</option>
+              <option value="5">5 days</option>
+              <option value="7">7 days</option>
+              <option value="14">14 days</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Counterparty Email (optional)</label>
+          <input class="form-input" id="nt-email" type="email" placeholder="other-party@example.com">
+          <div class="form-hint">If they're on Betweena, they'll be linked directly. Otherwise share the join code.</div>
+        </div>
+        <div id="nt-err" class="form-error" style="display:none;margin-bottom:0.75rem;"></div>
+        <button class="btn btn-primary btn-full btn-lg" id="nt-btn" onclick="createTransaction()">Create Escrow Transaction →</button>
+      </div>
+      <div>
+        <div class="card" style="background:var(--tl);border-color:rgba(0,107,92,0.2);margin-bottom:1rem;">
+          <div style="font-weight:700;font-size:0.88rem;color:var(--t);margin-bottom:0.75rem;">Fee Preview</div>
+          <div id="fee-preview">
+            <div style="font-size:0.82rem;color:var(--m);">Enter an amount to see fees.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.75rem;">How it works</div>
+          ${['Create transaction & share join code','Other party joins','Buyer funds escrow (amount + fee)','Seller delivers goods/service','Buyer approves → funds released'].map((s,i)=>`<div style="display:flex;gap:0.6rem;margin-bottom:0.5rem;font-size:0.8rem;"><div style="width:20px;height:20px;border-radius:50%;background:var(--t);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${i+1}</div><div style="color:var(--m);padding-top:2px;">${s}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function calcFeePreview() {
+  const amt = parseFloat(document.getElementById('nt-amount')?.value);
+  if (!amt || amt <= 0) { document.getElementById('fee-preview').innerHTML = '<div style="font-size:0.82rem;color:var(--m);">Enter an amount to see fees.</div>'; return; }
+  const fee = amt <= 1000 ? amt*0.035 : amt <= 10000 ? amt*0.0225 : Math.min(amt*0.015,500);
+  const rate = (fee/amt*100).toFixed(1);
+  document.getElementById('fee-preview').innerHTML = `
+    ${feeRow('Transaction Amount', `$${amt.toFixed(2)}`)}
+    ${feeRow(`Platform Fee (${rate}%)`, `$${fee.toFixed(2)}`)}
+    <div style="border-top:1px solid rgba(0,107,92,0.2);padding-top:0.5rem;margin-top:0.5rem;display:flex;justify-content:space-between;font-weight:700;font-size:0.88rem;"><span>Buyer Total</span><span>$${(amt+fee).toFixed(2)}</span></div>
+    <div style="font-size:0.72rem;color:var(--m);margin-top:0.5rem;">Seller receives: $${amt.toFixed(2)}</div>`;
+}
+function feeRow(l,v) { return `<div style="display:flex;justify-content:space-between;font-size:0.82rem;color:var(--m);margin-bottom:0.35rem;"><span>${l}</span><span style="font-weight:600;color:var(--ink);">${v}</span></div>`; }
+
+async function createTransaction() {
+  const title = document.getElementById('nt-title').value.trim();
+  const amount = parseFloat(document.getElementById('nt-amount').value);
+  const role = document.getElementById('nt-role').value;
+  const btn = document.getElementById('nt-btn');
+  if (!title) { showError('nt-err', 'Title is required'); return; }
+  if (!amount || amount <= 0) { showError('nt-err', 'Enter a valid amount'); return; }
+  btn.innerHTML = '<span class="spinner"></span> Creating...'; btn.disabled = true;
+  try {
+    const tx = await api('POST', '/transactions/create', {
+      title, amount,
+      description: document.getElementById('nt-desc').value,
+      category: document.getElementById('nt-cat').value,
+      initiator_role: role,
+      counterparty_email: document.getElementById('nt-email').value.trim() || undefined,
+      inspection_days: document.getElementById('nt-inspect').value
+    });
+    showToast('Escrow created successfully!', 'success');
+    navigate('transaction-detail', tx.id);
+  } catch(e) { showError('nt-err', e.message); btn.innerHTML = 'Create Escrow Transaction →'; btn.disabled = false; }
+}
+
+// ============= JOIN =============
+function renderJoin() {
+  document.getElementById('page').innerHTML = `
+    <div class="page-header"><div><div class="page-title">Join with Code</div><div class="page-sub">Enter the code shared by the transaction initiator.</div></div></div>
+    <div style="max-width:480px;">
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Join Code</label>
+          <input class="form-input" id="join-code" placeholder="e.g. AB3KX7PQ" style="font-family:monospace;font-size:1.25rem;text-transform:uppercase;letter-spacing:0.15em;text-align:center;" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div id="join-err" class="form-error" style="display:none;margin-bottom:0.75rem;"></div>
+        <button class="btn btn-primary btn-full btn-lg" id="join-btn" onclick="doJoin()">Join Transaction →</button>
+      </div>
+      <div class="card" style="margin-top:1rem;background:var(--tl);border-color:rgba(0,107,92,0.2);">
+        <div style="font-size:0.85rem;color:var(--ink2);"><strong>What happens next?</strong><br><br>After joining, you'll see the full transaction details. If you're the buyer, you'll be asked to fund the escrow. If you're the seller, wait for the buyer to fund before delivering.</div>
+      </div>
+    </div>`;
+}
+
+async function doJoin() {
+  const code = document.getElementById('join-code').value.trim();
+  const btn = document.getElementById('join-btn');
+  if (code.length < 6) { showError('join-err', 'Enter a valid join code'); return; }
+  btn.innerHTML = '<span class="spinner"></span> Joining...'; btn.disabled = true;
+  try {
+    const tx = await api('POST', '/transactions/join', { join_code: code });
+    showToast('Joined transaction!', 'success');
+    navigate('transaction-detail', tx.id);
+  } catch(e) { showError('join-err', e.message); btn.innerHTML = 'Join Transaction →'; btn.disabled = false; }
+}
+
+// ============= WALLET =============
+async function renderWallet() {
+  try {
+    const data = await api('GET', '/wallet');
+    const { wallet, transactions } = data;
+    const typeIcon = { deposit:'💰', withdrawal:'🏧', escrow_lock:'🔒', escrow_release:'✅' };
+    const typeLabel = { deposit:'Deposit', withdrawal:'Withdrawal', escrow_lock:'Escrow Funded', escrow_release:'Released' };
+    document.getElementById('page').innerHTML = `
+      <div class="wallet-hero">
+        <div class="wallet-bal-label">Available Balance</div>
+        <div class="wallet-bal">$${wallet.balance.toFixed(2)}</div>
+        <div class="wallet-actions">
+          <button class="btn-wallet-action" onclick="openDepositModal()">+ Deposit</button>
+          <button class="btn-wallet-action" onclick="openWithdrawModal(${wallet.balance})">↑ Withdraw</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--bd);"><div class="section-title-sm">Transaction History</div></div>
+        ${transactions.length === 0 ? `<div class="empty"><div class="empty-icon">💳</div><div class="empty-title">No wallet activity</div><div class="empty-sub">Deposit funds to start transacting</div></div>` :
+        transactions.map(t => `
+          <div style="display:flex;align-items:center;gap:0.9rem;padding:0.9rem 1.25rem;border-bottom:1px solid var(--bd);">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--s);display:flex;align-items:center;justify-content:center;font-size:1rem;">${typeIcon[t.type]||'📄'}</div>
+            <div style="flex:1;"><div style="font-size:0.88rem;font-weight:500;">${typeLabel[t.type]||t.type}</div><div style="font-size:0.75rem;color:var(--m);">${t.description} · ${new Date(t.created_at).toLocaleDateString()}</div></div>
+            <div style="text-align:right;"><div style="font-family:'Playfair Display',serif;font-weight:700;font-size:0.95rem;color:${t.amount>0?'#2E7D32':'var(--ink)'};">${t.amount>0?'+':''}$${Math.abs(t.amount).toFixed(2)}</div><div style="font-size:0.7rem;color:var(--ml);">Bal: $${t.balance_after.toFixed(2)}</div></div>
+          </div>`).join('')}
+      </div>`;
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function openDepositModal() {
+  openModal('Add Funds to Wallet', `
+    <div class="form-group">
+      <label class="form-label">Amount (USD)</label>
+      <input class="form-input" id="dep-amt" type="number" min="1" max="10000" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Payment Method</label>
+      <select class="form-input form-select" id="dep-method">
+        <option>MTN Mobile Money</option>
+        <option>Vodafone Cash</option>
+        <option>Airtel Money</option>
+        <option>Bank Transfer</option>
+        <option>Card Payment</option>
+      </select>
+    </div>
+    <div style="background:var(--tl);border-radius:8px;padding:0.75rem;font-size:0.8rem;color:var(--t);margin-bottom:1rem;">🔒 This is a demo deposit. In production, this connects to your payment gateway.</div>
+    <button class="btn btn-primary btn-full" onclick="doDeposit()">Add Funds →</button>`);
+}
+async function doDeposit() {
+  const amount = parseFloat(document.getElementById('dep-amt')?.value);
+  const method = document.getElementById('dep-method')?.value;
+  if (!amount || amount<=0) { showToast('Enter a valid amount','error'); return; }
+  try {
+    const r = await api('POST', '/wallet/deposit', { amount, method });
+    user.wallet_balance = r.balance;
+    localStorage.setItem('bt_user', JSON.stringify(user));
+    updateSidebarUser();
+    showToast(`✅ $${amount.toFixed(2)} added to your wallet!`, 'success');
+    closeModal(); navigate('wallet');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function openWithdrawModal(balance) {
+  openModal('Withdraw Funds', `
+    <div style="font-size:0.82rem;color:var(--m);margin-bottom:1rem;">Available: <strong>$${balance.toFixed(2)}</strong></div>
+    <div class="form-group"><label class="form-label">Amount</label><input class="form-input" id="wd-amt" type="number" min="1" max="${balance}" placeholder="0.00"></div>
+    <div class="form-group"><label class="form-label">Method</label><select class="form-input form-select" id="wd-method"><option>MTN Mobile Money</option><option>Vodafone Cash</option><option>Bank Transfer</option></select></div>
+    <div class="form-group"><label class="form-label">Account Number</label><input class="form-input" id="wd-acct" placeholder="e.g. 0241234567"></div>
+    <button class="btn btn-primary btn-full" onclick="doWithdraw()">Withdraw →</button>`);
+}
+async function doWithdraw() {
+  const amount = parseFloat(document.getElementById('wd-amt')?.value);
+  const method = document.getElementById('wd-method')?.value;
+  const account_number = document.getElementById('wd-acct')?.value;
+  if (!amount || amount<=0) { showToast('Enter a valid amount','error'); return; }
+  try {
+    const r = await api('POST', '/wallet/withdraw', { amount, method, account_number });
+    user.wallet_balance = r.balance;
+    localStorage.setItem('bt_user', JSON.stringify(user));
+    updateSidebarUser();
+    showToast('Withdrawal initiated. Funds arrive in 24 hours.', 'success');
+    closeModal(); navigate('wallet');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============= NOTIFICATIONS =============
+async function renderNotifications() {
+  try {
+    const notifs = await api('GET', '/transactions/user/notifications');
+    document.getElementById('notif-badge').style.display = 'none';
+    document.getElementById('notif-dot').style.display = 'none';
+    const typeIcon = { success:'✅', error:'❌', info:'ℹ️', warning:'⚠️' };
+    const typeBg = { success:'#E8F5E9', error:'#FFEBEE', info:'#E3F2FD', warning:'#FFF8E1' };
+    document.getElementById('page').innerHTML = `
+      <div class="page-header"><div class="page-title">Notifications</div></div>
+      <div class="card" style="padding:0;">
+        ${notifs.length === 0 ? `<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">All caught up!</div></div>` :
+        notifs.map(n => `
+          <div class="notif-item ${n.read?'':'notif-unread'}" ${n.transaction_id?`onclick="navigate('transaction-detail','${n.transaction_id}')" style="cursor:pointer;"`:''}>
+            <div class="notif-icon" style="background:${typeBg[n.type]||'#F5F5F5'};">${typeIcon[n.type]||'📢'}</div>
+            <div style="flex:1;"><div class="notif-title">${n.title}</div><div class="notif-msg">${n.message}</div><div class="notif-time">${timeAgo(n.created_at)}</div></div>
+          </div>`).join('')}
+      </div>`;
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function timeAgo(date) {
+  const d = new Date(date); const now = new Date(); const diff = (now - d) / 1000;
+  if (diff < 60) return 'just now'; if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return d.toLocaleDateString();
+}
+
+// ============= PROFILE =============
+function renderProfile() {
+  document.getElementById('page').innerHTML = `
+    <div class="page-header"><div class="page-title">Profile</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--bd);">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--tl);display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:700;color:var(--t);">${initials(user)}</div>
+          <div><div style="font-size:1.1rem;font-weight:700;">${user?.first_name} ${user?.last_name}</div><div style="font-size:0.82rem;color:var(--m);">${user?.email}</div><div style="margin-top:0.25rem;"><span class="badge badge-completed" style="font-size:0.65rem;">KYC ${user?.kyc_status}</span></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="p-fn" value="${user?.first_name||''}"></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="p-ln" value="${user?.last_name||''}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="${user?.email||''}" disabled style="opacity:0.6;"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="p-phone" value="${user?.phone||''}"></div>
+        <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="section-title-sm" style="margin-bottom:1rem;">Account Stats</div>
+          ${row('Member Since', new Date(user?.created_at||Date.now()).toLocaleDateString())}
+          ${row('KYC Status', user?.kyc_status || 'pending')}
+          ${row('Wallet Balance', `$${(user?.wallet_balance||0).toFixed(2)}`)}
+        </div>
+        <div class="card" style="background:#FFEBEE;border-color:rgba(211,47,47,0.15);">
+          <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.75rem;color:#C62828;">Danger Zone</div>
+          <button class="btn btn-danger btn-full" onclick="logout()">Sign Out of All Devices</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function saveProfile() {
+  const first_name = document.getElementById('p-fn').value.trim();
+  const last_name = document.getElementById('p-ln').value.trim();
+  const phone = document.getElementById('p-phone').value.trim();
+  try {
+    await api('PUT', '/auth/profile', { first_name, last_name, phone });
+    user = { ...user, first_name, last_name, phone };
+    localStorage.setItem('bt_user', JSON.stringify(user));
+    updateSidebarUser();
+    showToast('Profile updated!', 'success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============= MODAL =============
+function openModal(title, body) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+// ============= TOAST =============
+function showToast(msg, type='info') {
+  const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span>${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { el.style.animation='slideInRight .3s ease reverse'; setTimeout(()=>el.remove(),300); }, 3500);
+}
+function showError(id, msg) { const el=document.getElementById(id); if(el){el.textContent=msg;el.style.display='block';} }
+
+// ============= INIT =============
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.display = 'none';
+    if (token && user) { showApp(); }
+    else { showAuth(); }
+  }, 600);
+});
+</script>
+</body>
+</html>
