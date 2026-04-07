@@ -9,8 +9,14 @@ let dbInstance = null;
 class JsonDB {
   constructor() { this.data = this._load(); }
   _load() {
-    if (fs.existsSync(DB_PATH)) { try { return JSON.parse(fs.readFileSync(DB_PATH,'utf8')); } catch(e){} }
-    return { users:[], wallets:[], wallet_transactions:[], transactions:[], transaction_messages:[], notifications:[], fundraisers:[], fundraiser_donations:[] };
+    const defaults = { users:[], wallets:[], wallet_transactions:[], transactions:[], transaction_messages:[], notifications:[], fundraisers:[], fundraiser_donations:[] };
+    if (fs.existsSync(DB_PATH)) {
+      try {
+        const saved = JSON.parse(fs.readFileSync(DB_PATH,'utf8'));
+        return { ...defaults, ...saved }; // merge so new tables always exist
+      } catch(e){}
+    }
+    return defaults;
   }
   _save() { fs.writeFileSync(DB_PATH, JSON.stringify(this.data)); }
   pragma(){}
