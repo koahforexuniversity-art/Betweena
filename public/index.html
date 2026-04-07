@@ -299,6 +299,7 @@ a{color:inherit;text-decoration:none;}
     <div class="sb-section">Account</div>
     <div class="sb-item" data-page="wallet"><span class="icon">💳</span>Wallet</div>
     <div class="sb-item" data-page="notifications"><span class="icon">🔔</span>Notifications<span class="sb-badge" id="notif-badge" style="display:none">0</span></div>
+    <div class="sb-item" data-page="disputes"><span class="icon">⚠️</span>Disputes<span class="sb-badge" id="dispute-badge" style="display:none;background:#D32F2F;">0</span></div>
     <div class="sb-item" data-page="profile"><span class="icon">👤</span>Profile</div>
     <div class="sb-bottom">
       <div class="sb-user">
@@ -481,11 +482,11 @@ function showApp() {
 function navigate(page, data) {
   currentPage = page;
   document.querySelectorAll('.sb-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
-  const titles = { dashboard:'Dashboard', transactions:'My Transactions', 'new-transaction':'New Escrow Transaction', join:'Join Transaction', wallet:'Wallet', notifications:'Notifications', profile:'Profile', 'transaction-detail':'Transaction Details' };
+  const titles = { dashboard:'Dashboard', transactions:'My Transactions', disputes:'Disputes', 'new-transaction':'New Escrow Transaction', join:'Join Transaction', wallet:'Wallet', notifications:'Notifications', profile:'Profile', 'transaction-detail':'Transaction Details' };
   document.getElementById('topbar-title').textContent = titles[page] || 'Betweena';
   const pageEl = document.getElementById('page');
   pageEl.innerHTML = '<div style="display:flex;justify-content:center;padding:3rem"><div class="spinner spinner-dark"></div></div>';
-  const pages = { dashboard: renderDashboard, transactions: renderTransactions, 'new-transaction': renderNewTransaction, join: renderJoin, wallet: renderWallet, notifications: renderNotifications, profile: renderProfile, 'transaction-detail': () => renderTransactionDetail(data) };
+  const pages = { dashboard: renderDashboard, transactions: () => renderTransactions(data), disputes: () => renderTransactions('disputed'), 'new-transaction': renderNewTransaction, join: renderJoin, wallet: renderWallet, notifications: renderNotifications, profile: renderProfile, 'transaction-detail': () => renderTransactionDetail(data) };
   if (pages[page]) pages[page]();
   else pageEl.innerHTML = '<div class="empty"><div class="empty-icon">🚧</div><div class="empty-title">Coming Soon</div></div>';
   // Close mobile sidebar
@@ -524,6 +525,7 @@ async function renderDashboard() {
     statsCache = stats; transactionsCache = txns;
     const active = txns.filter(t => !['completed','cancelled'].includes(t.status));
     if (active.length) { document.getElementById('active-badge').style.display=''; document.getElementById('active-badge').textContent = active.length; }
+    if (stats.dispute_count > 0) { document.getElementById('dispute-badge').style.display=''; document.getElementById('dispute-badge').textContent = stats.dispute_count; }
 
     document.getElementById('page').innerHTML = `
       <div class="page-header">
@@ -546,10 +548,10 @@ async function renderDashboard() {
           <div class="metric-value">${fmt(user?.wallet_balance||0)}</div>
           <div class="metric-sub"><a href="#" onclick="navigate('wallet')" style="color:var(--t);font-weight:600;">Add funds →</a></div>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" ${stats.dispute_count>0?`onclick="navigate('disputes')" style="cursor:pointer;border-color:rgba(211,47,47,0.3);"`:''}>
           <div class="metric-label">Disputes</div>
           <div class="metric-value" style="color:${stats.dispute_count>0?'#C62828':'var(--ink)'}">${stats.dispute_count}</div>
-          <div class="metric-sub">${stats.dispute_count>0?'<span style="color:#C62828">Needs attention</span>':'All clear ✓'}</div>
+          <div class="metric-sub">${stats.dispute_count>0?'<span style="color:#C62828;font-weight:600;">Needs attention →</span>':'All clear ✓'}</div>
         </div>
       </div>
       <div class="card" style="margin-bottom:1.5rem;">
@@ -600,23 +602,25 @@ function statusLabel(s) {
 }
 
 // ============= TRANSACTIONS =============
-async function renderTransactions() {
+async function renderTransactions(defaultFilter) {
   try {
     const txns = await api('GET', '/transactions');
     transactionsCache = txns;
+    const activeFilter = defaultFilter || 'all';
     document.getElementById('page').innerHTML = `
       <div class="page-header">
-        <div><div class="page-title">My Transactions</div><div class="page-sub">${txns.length} total transaction${txns.length!==1?'s':''}</div></div>
+        <div><div class="page-title">${activeFilter==='disputed'?'Disputes':'My Transactions'}</div><div class="page-sub">${txns.length} total transaction${txns.length!==1?'s':''}</div></div>
         <button class="btn btn-primary" onclick="navigate('new-transaction')">+ New Escrow</button>
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
-        ${['all','active','completed','disputed'].map(f=>`<button class="btn btn-ghost btn-sm" id="filter-${f}" onclick="filterTx('${f}')" style="${f==='all'?'background:var(--tl);color:var(--t);border-color:var(--t);':''}">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+        ${['all','active','completed','disputed'].map(f=>`<button class="btn btn-ghost btn-sm" id="filter-${f}" onclick="filterTx('${f}')" style="${f===activeFilter?'background:var(--tl);color:var(--t);border-color:var(--t);':''}">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
       </div>
       <div class="card" style="padding:0;">
         ${txns.length === 0 ? `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div><button class="btn btn-primary" style="margin-top:1rem;" onclick="navigate('new-transaction')">Create your first escrow</button></div>` :
         `<div class="tx-list" id="tx-list">${txns.map(renderTxRow).join('')}</div>`}
       </div>`;
     window._allTxns = txns;
+    if (activeFilter !== 'all') filterTx(activeFilter);
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -696,6 +700,22 @@ async function renderTransactionDetail(txId) {
           ${actionBtns ? `<div style="border-top:1px solid var(--bd);margin-top:1.25rem;padding-top:1.25rem;display:flex;flex-direction:column;gap:0.5rem;">${actionBtns}</div>` : ''}
         </div>
       </div>
+
+      ${tx.status === 'disputed' ? `
+      <div class="card" style="margin-bottom:1.5rem;background:#FFF5F5;border-color:rgba(211,47,47,0.25);">
+        <div style="display:flex;align-items:center;gap:0.9rem;margin-bottom:1rem;">
+          <div style="width:42px;height:42px;border-radius:50%;background:#FFCDD2;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">⚠️</div>
+          <div>
+            <div style="font-weight:700;color:#C62828;font-size:1rem;">Dispute Under Review</div>
+            <div style="font-size:0.78rem;color:#B71C1C;opacity:0.85;">Our team will review and contact both parties within 48 hours.</div>
+          </div>
+        </div>
+        ${row('Dispute Reason', tx.dispute_reason || 'Not specified')}
+        ${tx.disputed_at ? row('Filed On', new Date(tx.disputed_at).toLocaleDateString('en-GH', {day:'numeric',month:'long',year:'numeric'})) : ''}
+        <div style="margin-top:1rem;padding:0.85rem 1rem;background:rgba(211,47,47,0.06);border-radius:8px;font-size:0.82rem;color:#7f1515;line-height:1.6;">
+          🔒 <strong>Funds are frozen</strong> until this dispute is resolved. Use the messages below to communicate with the other party while our team investigates.
+        </div>
+      </div>` : ''}
 
       <div class="card">
         <div class="section-title-sm" style="margin-bottom:0.75rem;">Transaction Messages</div>
