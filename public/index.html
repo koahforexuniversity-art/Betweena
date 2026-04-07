@@ -246,6 +246,10 @@ a{color:inherit;text-decoration:none;}
   .p-arrow{display:none;}
 }
 
+/* CURRENCY SELECT */
+.currency-select{padding:0.35rem 0.65rem;border-radius:8px;border:1.5px solid var(--bd);font-size:0.8rem;font-weight:600;color:var(--ink2);background:var(--w);cursor:pointer;outline:none;}
+.currency-select:focus{border-color:var(--t);}
+
 /* JOIN CODE display */
 .join-code-display{
   font-family:monospace;font-size:1.5rem;font-weight:800;letter-spacing:0.2em;
@@ -313,7 +317,15 @@ a{color:inherit;text-decoration:none;}
         <div class="tb-page-title" id="topbar-title">Dashboard</div>
       </div>
       <div class="tb-right">
-        <div class="tb-balance">Balance: <strong id="tb-balance">$0.00</strong></div>
+        <select class="currency-select" id="currency-select" onchange="changeCurrency(this.value)">
+          <option value="GHS">₵ GHS</option>
+          <option value="USD">$ USD</option>
+          <option value="EUR">€ EUR</option>
+          <option value="GBP">£ GBP</option>
+          <option value="NGN">₦ NGN</option>
+          <option value="KES">KSh KES</option>
+        </select>
+        <div class="tb-balance">Balance: <strong id="tb-balance">₵0.00</strong></div>
         <button class="btn-topbar" onclick="navigate('new-transaction')">+ New Escrow</button>
         <div class="tb-notif" onclick="navigate('notifications')">
           🔔<div class="notif-dot" id="notif-dot" style="display:none;"></div>
@@ -346,6 +358,30 @@ let user = JSON.parse(localStorage.getItem('bt_user') || 'null');
 let currentPage = 'dashboard';
 let transactionsCache = [];
 let statsCache = {};
+
+// ============= CURRENCY =============
+const CURRENCIES = {
+  GHS: { name: 'Ghana Cedi',       symbol: '₵',   rate: 1,       locale: 'en-GH' },
+  USD: { name: 'US Dollar',        symbol: '$',   rate: 0.0671,  locale: 'en-US' },
+  EUR: { name: 'Euro',             symbol: '€',   rate: 0.0618,  locale: 'de-DE' },
+  GBP: { name: 'British Pound',    symbol: '£',   rate: 0.0529,  locale: 'en-GB' },
+  NGN: { name: 'Nigerian Naira',   symbol: '₦',   rate: 110.4,   locale: 'en-NG' },
+  KES: { name: 'Kenyan Shilling',  symbol: 'KSh', rate: 8.72,    locale: 'en-KE' },
+};
+let selectedCurrency = localStorage.getItem('bt_currency') || 'GHS';
+
+function fmt(amount) {
+  const c = CURRENCIES[selectedCurrency] || CURRENCIES.GHS;
+  const v = (amount || 0) * c.rate;
+  return c.symbol + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function changeCurrency(code) {
+  selectedCurrency = code;
+  localStorage.setItem('bt_currency', code);
+  updateSidebarUser();
+  navigate(currentPage);
+}
 
 // ============= API =============
 async function api(method, path, body) {
@@ -464,7 +500,9 @@ function updateSidebarUser() {
   document.getElementById('sb-avatar').textContent = initials;
   document.getElementById('sb-name').textContent = `${user.first_name} ${user.last_name}`;
   document.getElementById('sb-email').textContent = user.email;
-  document.getElementById('tb-balance').textContent = `$${(user.wallet_balance||0).toFixed(2)}`;
+  document.getElementById('tb-balance').textContent = fmt(user.wallet_balance||0);
+  const sel = document.getElementById('currency-select');
+  if (sel) sel.value = selectedCurrency;
   if (user.unread_count > 0) {
     document.getElementById('notif-badge').style.display = '';
     document.getElementById('notif-badge').textContent = user.unread_count;
@@ -495,17 +533,17 @@ async function renderDashboard() {
       <div class="metrics-grid">
         <div class="metric-card">
           <div class="metric-label">In Escrow</div>
-          <div class="metric-value">$${stats.in_escrow.toFixed(2)}</div>
+          <div class="metric-value">${fmt(stats.in_escrow)}</div>
           <div class="metric-sub">${stats.active_count} active transaction${stats.active_count!==1?'s':''}</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Total Released</div>
-          <div class="metric-value">$${stats.total_released.toFixed(2)}</div>
+          <div class="metric-value">${fmt(stats.total_released)}</div>
           <div class="metric-sub">Completed successfully</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Wallet Balance</div>
-          <div class="metric-value">$${(user?.wallet_balance||0).toFixed(2)}</div>
+          <div class="metric-value">${fmt(user?.wallet_balance||0)}</div>
           <div class="metric-sub"><a href="#" onclick="navigate('wallet')" style="color:var(--t);font-weight:600;">Add funds →</a></div>
         </div>
         <div class="metric-card">
@@ -551,7 +589,7 @@ function renderTxRow(tx) {
       </div>
     </div>
     <div>
-      <div class="tx-amount">$${tx.amount.toFixed(2)}</div>
+      <div class="tx-amount">${fmt(tx.amount)}</div>
       <div class="tx-status-wrap"><span class="badge badge-${tx.status}">${statusLabel(tx.status)}</span></div>
     </div>
   </div>`;
@@ -610,7 +648,7 @@ async function renderTransactionDetail(txId) {
       <div class="tx-detail-header">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
           <div>
-            <div class="tx-detail-amount">$${tx.amount.toFixed(2)}</div>
+            <div class="tx-detail-amount">${fmt(tx.amount)}</div>
             <div class="tx-detail-title">${tx.title}</div>
             <div style="margin-top:0.75rem;"><span class="badge badge-${tx.status}" style="font-size:0.78rem;">${statusLabel(tx.status)}</span></div>
           </div>
@@ -635,8 +673,8 @@ async function renderTransactionDetail(txId) {
           <div class="section-title-sm" style="margin-bottom:1rem;">Transaction Details</div>
           ${row('Category', tx.category || 'Goods')}
           ${row('Your Role', myRole.charAt(0).toUpperCase()+myRole.slice(1))}
-          ${row('Platform Fee', `$${(tx.fee_amount||0).toFixed(2)} (${((tx.fee_rate||0)*100).toFixed(1)}%)`)}
-          ${row('Total Cost', myRole==='buyer'?`$${(tx.amount+(tx.fee_amount||0)).toFixed(2)}`:tx.amount.toFixed(2))}
+          ${row('Platform Fee', `${fmt(tx.fee_amount||0)} (${((tx.fee_rate||0)*100).toFixed(1)}%)`)}
+          ${row('Total Cost', myRole==='buyer'?fmt(tx.amount+(tx.fee_amount||0)):fmt(tx.amount))}
           ${row('Inspection Window', `${tx.inspection_days} days`)}
           ${row('Created', new Date(tx.created_at).toLocaleDateString())}
           ${tx.funded_at?row('Funded',new Date(tx.funded_at).toLocaleDateString()):''}
@@ -690,13 +728,13 @@ async function renderTransactionDetail(txId) {
 function getActionButtons(tx, myRole) {
   const btns = [];
   if (tx.status === 'awaiting_funding' && myRole === 'buyer') {
-    btns.push(`<button class="btn btn-primary" onclick="doFund('${tx.id}',${tx.amount},${tx.fee_amount||0})">💳 Fund Escrow ($${(tx.amount+(tx.fee_amount||0)).toFixed(2)})</button>`);
+    btns.push(`<button class="btn btn-primary" onclick="doFund('${tx.id}',${tx.amount},${tx.fee_amount||0})">💳 Fund Escrow (${fmt(tx.amount+(tx.fee_amount||0))})</button>`);
   }
   if (tx.status === 'funded' && myRole === 'seller') {
     btns.push(`<button class="btn btn-primary" onclick="openShipModal('${tx.id}')">📦 Mark as Shipped</button>`);
   }
   if (['funded','shipped'].includes(tx.status) && myRole === 'buyer') {
-    btns.push(`<button class="btn btn-primary" onclick="doApprove('${tx.id}','${tx.title}',${tx.amount})">✅ Approve & Release ($${tx.amount.toFixed(2)})</button>`);
+    btns.push(`<button class="btn btn-primary" onclick="doApprove('${tx.id}','${tx.title}',${tx.amount})">✅ Approve & Release (${fmt(tx.amount)})</button>`);
     btns.push(`<button class="btn btn-danger" onclick="openDisputeModal('${tx.id}')">⚠️ Raise Dispute</button>`);
   }
   if (['funded','shipped'].includes(tx.status) && myRole === 'seller') {
@@ -736,10 +774,10 @@ async function doFund(txId, amount, fee) {
   const total = (amount + fee).toFixed(2);
   const bal = user?.wallet_balance || 0;
   if (bal < (amount + fee)) {
-    showToast(`Insufficient balance. You need $${total}. Add funds to your wallet.`, 'error');
+    showToast(`Insufficient balance. You need ${fmt(amount + fee)}. Add funds to your wallet.`, 'error');
     navigate('wallet'); return;
   }
-  if (!confirm(`Fund escrow: $${amount.toFixed(2)} + $${fee.toFixed(2)} fee = $${total} will be deducted from your wallet.`)) return;
+  if (!confirm(`Fund escrow: ${fmt(amount)} + ${fmt(fee)} fee = ${fmt(amount + fee)} will be deducted from your wallet.`)) return;
   try {
     await api('POST', `/transactions/${txId}/fund`);
     showToast('Escrow funded! Funds are now held securely.', 'success');
@@ -748,7 +786,7 @@ async function doFund(txId, amount, fee) {
 }
 
 async function doApprove(txId, title, amount) {
-  if (!confirm(`Approve and release $${parseFloat(amount).toFixed(2)} to the seller for "${title}"? This cannot be undone.`)) return;
+  if (!confirm(`Approve and release ${fmt(parseFloat(amount))} to the seller for "${title}"? This cannot be undone.`)) return;
   try {
     await api('POST', `/transactions/${txId}/approve`);
     showToast('✅ Payment released! Transaction complete.', 'success');
@@ -821,8 +859,8 @@ function renderNewTransaction() {
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Amount (USD) *</label>
-            <input class="form-input" id="nt-amount" type="number" min="1" max="500000" placeholder="0.00" oninput="calcFeePreview()">
+            <label class="form-label">Amount (${(CURRENCIES[selectedCurrency]||CURRENCIES.GHS).name}) *</label>
+            <input class="form-input" id="nt-amount" type="number" min="1" placeholder="0.00" oninput="calcFeePreview()">
           </div>
           <div class="form-group">
             <label class="form-label">Category</label>
@@ -879,25 +917,35 @@ function renderNewTransaction() {
 }
 
 function calcFeePreview() {
-  const amt = parseFloat(document.getElementById('nt-amount')?.value);
-  if (!amt || amt <= 0) { document.getElementById('fee-preview').innerHTML = '<div style="font-size:0.82rem;color:var(--m);">Enter an amount to see fees.</div>'; return; }
-  const fee = amt <= 1000 ? amt*0.035 : amt <= 10000 ? amt*0.0225 : Math.min(amt*0.015,500);
-  const rate = (fee/amt*100).toFixed(1);
+  const entered = parseFloat(document.getElementById('nt-amount')?.value);
+  if (!entered || entered <= 0) { document.getElementById('fee-preview').innerHTML = '<div style="font-size:0.82rem;color:var(--m);">Enter an amount to see fees.</div>'; return; }
+  // Convert to GHS for fee calculation, then display in selected currency
+  const c = CURRENCIES[selectedCurrency] || CURRENCIES.GHS;
+  const amt = c.rate === 1 ? entered : entered / c.rate; // GHS amount
+  const feeGhs = amt <= 15000 ? amt*0.035 : amt <= 150000 ? amt*0.0225 : Math.min(amt*0.015,7500);
+  const fee = feeGhs * c.rate; // back to display currency
+  const amt_d = entered; // display amount (as entered)
+  const cc = CURRENCIES[selectedCurrency] || CURRENCIES.GHS;
+  const rate = (feeGhs/amt*100).toFixed(1);
+  const symFmt = v => cc.symbol + v.toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('fee-preview').innerHTML = `
-    ${feeRow('Transaction Amount', `$${amt.toFixed(2)}`)}
-    ${feeRow(`Platform Fee (${rate}%)`, `$${fee.toFixed(2)}`)}
-    <div style="border-top:1px solid rgba(0,107,92,0.2);padding-top:0.5rem;margin-top:0.5rem;display:flex;justify-content:space-between;font-weight:700;font-size:0.88rem;"><span>Buyer Total</span><span>$${(amt+fee).toFixed(2)}</span></div>
-    <div style="font-size:0.72rem;color:var(--m);margin-top:0.5rem;">Seller receives: $${amt.toFixed(2)}</div>`;
+    ${feeRow('Transaction Amount', symFmt(amt_d))}
+    ${feeRow(`Platform Fee (${rate}%)`, symFmt(fee))}
+    <div style="border-top:1px solid rgba(0,107,92,0.2);padding-top:0.5rem;margin-top:0.5rem;display:flex;justify-content:space-between;font-weight:700;font-size:0.88rem;"><span>Buyer Total</span><span>${symFmt(amt_d+fee)}</span></div>
+    <div style="font-size:0.72rem;color:var(--m);margin-top:0.5rem;">Seller receives: ${symFmt(amt_d)}</div>`;
 }
 function feeRow(l,v) { return `<div style="display:flex;justify-content:space-between;font-size:0.82rem;color:var(--m);margin-bottom:0.35rem;"><span>${l}</span><span style="font-weight:600;color:var(--ink);">${v}</span></div>`; }
 
 async function createTransaction() {
   const title = document.getElementById('nt-title').value.trim();
-  const amount = parseFloat(document.getElementById('nt-amount').value);
+  const enteredAmount = parseFloat(document.getElementById('nt-amount').value);
   const role = document.getElementById('nt-role').value;
   const btn = document.getElementById('nt-btn');
   if (!title) { showError('nt-err', 'Title is required'); return; }
-  if (!amount || amount <= 0) { showError('nt-err', 'Enter a valid amount'); return; }
+  if (!enteredAmount || enteredAmount <= 0) { showError('nt-err', 'Enter a valid amount'); return; }
+  // Convert entered amount to GHS (base currency) before sending to backend
+  const c = CURRENCIES[selectedCurrency] || CURRENCIES.GHS;
+  const amount = c.rate === 1 ? enteredAmount : enteredAmount / c.rate;
   btn.innerHTML = '<span class="spinner"></span> Creating...'; btn.disabled = true;
   try {
     const tx = await api('POST', '/transactions/create', {
@@ -954,7 +1002,7 @@ async function renderWallet() {
     document.getElementById('page').innerHTML = `
       <div class="wallet-hero">
         <div class="wallet-bal-label">Available Balance</div>
-        <div class="wallet-bal">$${wallet.balance.toFixed(2)}</div>
+        <div class="wallet-bal">${fmt(wallet.balance)}</div>
         <div class="wallet-actions">
           <button class="btn-wallet-action" onclick="openDepositModal()">+ Deposit</button>
           <button class="btn-wallet-action" onclick="openWithdrawModal(${wallet.balance})">↑ Withdraw</button>
@@ -967,16 +1015,17 @@ async function renderWallet() {
           <div style="display:flex;align-items:center;gap:0.9rem;padding:0.9rem 1.25rem;border-bottom:1px solid var(--bd);">
             <div style="width:38px;height:38px;border-radius:10px;background:var(--s);display:flex;align-items:center;justify-content:center;font-size:1rem;">${typeIcon[t.type]||'📄'}</div>
             <div style="flex:1;"><div style="font-size:0.88rem;font-weight:500;">${typeLabel[t.type]||t.type}</div><div style="font-size:0.75rem;color:var(--m);">${t.description} · ${new Date(t.created_at).toLocaleDateString()}</div></div>
-            <div style="text-align:right;"><div style="font-family:'Playfair Display',serif;font-weight:700;font-size:0.95rem;color:${t.amount>0?'#2E7D32':'var(--ink)'};">${t.amount>0?'+':''}$${Math.abs(t.amount).toFixed(2)}</div><div style="font-size:0.7rem;color:var(--ml);">Bal: $${t.balance_after.toFixed(2)}</div></div>
+            <div style="text-align:right;"><div style="font-family:'Playfair Display',serif;font-weight:700;font-size:0.95rem;color:${t.amount>0?'#2E7D32':'var(--ink)'};">${t.amount>0?'+':''}${fmt(Math.abs(t.amount))}</div><div style="font-size:0.7rem;color:var(--ml);">Bal: ${fmt(t.balance_after)}</div></div>
           </div>`).join('')}
       </div>`;
   } catch(e) { showToast(e.message,'error'); }
 }
 
 function openDepositModal() {
+  const cname = (CURRENCIES[selectedCurrency]||CURRENCIES.GHS).name;
   openModal('Add Funds to Wallet', `
     <div class="form-group">
-      <label class="form-label">Amount (USD)</label>
+      <label class="form-label">Amount (${cname})</label>
       <input class="form-input" id="dep-amt" type="number" min="1" max="10000" placeholder="0.00">
     </div>
     <div class="form-group">
@@ -993,32 +1042,36 @@ function openDepositModal() {
     <button class="btn btn-primary btn-full" onclick="doDeposit()">Add Funds →</button>`);
 }
 async function doDeposit() {
-  const amount = parseFloat(document.getElementById('dep-amt')?.value);
+  const entered = parseFloat(document.getElementById('dep-amt')?.value);
   const method = document.getElementById('dep-method')?.value;
-  if (!amount || amount<=0) { showToast('Enter a valid amount','error'); return; }
+  if (!entered || entered<=0) { showToast('Enter a valid amount','error'); return; }
+  const c = CURRENCIES[selectedCurrency] || CURRENCIES.GHS;
+  const amount = c.rate === 1 ? entered : entered / c.rate; // convert to GHS for backend
   try {
     const r = await api('POST', '/wallet/deposit', { amount, method });
     user.wallet_balance = r.balance;
     localStorage.setItem('bt_user', JSON.stringify(user));
     updateSidebarUser();
-    showToast(`✅ $${amount.toFixed(2)} added to your wallet!`, 'success');
+    showToast(`✅ ${fmt(amount)} added to your wallet!`, 'success');
     closeModal(); navigate('wallet');
   } catch(e) { showToast(e.message,'error'); }
 }
 
 function openWithdrawModal(balance) {
   openModal('Withdraw Funds', `
-    <div style="font-size:0.82rem;color:var(--m);margin-bottom:1rem;">Available: <strong>$${balance.toFixed(2)}</strong></div>
+    <div style="font-size:0.82rem;color:var(--m);margin-bottom:1rem;">Available: <strong>${fmt(balance)}</strong></div>
     <div class="form-group"><label class="form-label">Amount</label><input class="form-input" id="wd-amt" type="number" min="1" max="${balance}" placeholder="0.00"></div>
     <div class="form-group"><label class="form-label">Method</label><select class="form-input form-select" id="wd-method"><option>MTN Mobile Money</option><option>Vodafone Cash</option><option>Bank Transfer</option></select></div>
     <div class="form-group"><label class="form-label">Account Number</label><input class="form-input" id="wd-acct" placeholder="e.g. 0241234567"></div>
     <button class="btn btn-primary btn-full" onclick="doWithdraw()">Withdraw →</button>`);
 }
 async function doWithdraw() {
-  const amount = parseFloat(document.getElementById('wd-amt')?.value);
+  const entered = parseFloat(document.getElementById('wd-amt')?.value);
   const method = document.getElementById('wd-method')?.value;
   const account_number = document.getElementById('wd-acct')?.value;
-  if (!amount || amount<=0) { showToast('Enter a valid amount','error'); return; }
+  if (!entered || entered<=0) { showToast('Enter a valid amount','error'); return; }
+  const c = CURRENCIES[selectedCurrency] || CURRENCIES.GHS;
+  const amount = c.rate === 1 ? entered : entered / c.rate; // convert to GHS for backend
   try {
     const r = await api('POST', '/wallet/withdraw', { amount, method, account_number });
     user.wallet_balance = r.balance;
@@ -1080,7 +1133,7 @@ function renderProfile() {
           <div class="section-title-sm" style="margin-bottom:1rem;">Account Stats</div>
           ${row('Member Since', new Date(user?.created_at||Date.now()).toLocaleDateString())}
           ${row('KYC Status', user?.kyc_status || 'pending')}
-          ${row('Wallet Balance', `$${(user?.wallet_balance||0).toFixed(2)}`)}
+          ${row('Wallet Balance', fmt(user?.wallet_balance||0))}
         </div>
         <div class="card" style="background:#FFEBEE;border-color:rgba(211,47,47,0.15);">
           <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.75rem;color:#C62828;">Danger Zone</div>
@@ -1130,6 +1183,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = e.target.closest('.sb-item');
     if (item && item.dataset.page) navigate(item.dataset.page);
   });
+
+  // Restore saved currency on load
+  const sel = document.getElementById('currency-select');
+  if (sel) sel.value = selectedCurrency;
 
   setTimeout(() => {
     document.getElementById('loading-screen').style.display = 'none';

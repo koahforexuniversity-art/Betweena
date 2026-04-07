@@ -26,7 +26,7 @@ class Stmt {
       const [id,fn,ln,email,phone,ph,kyc]=p;
       d.users.push({id,first_name:fn,last_name:ln,email,phone,password_hash:ph,kyc_status:kyc,role:'user',created_at:now,updated_at:now});
     } else if(/^INSERT INTO wallets/i.test(s)){
-      const [id,uid,bal]=p; d.wallets.push({id,user_id:uid,balance:parseFloat(bal)||0,currency:'USD',created_at:now});
+      const [id,uid,bal]=p; d.wallets.push({id,user_id:uid,balance:parseFloat(bal)||0,currency:'GHS',created_at:now});
     } else if(/^INSERT INTO wallet_transactions/i.test(s)){
       const [id,wid,type,amt,desc,ref,baf]=p; d.wallet_transactions.push({id,wallet_id:wid,type,amount:parseFloat(amt),description:desc,reference:ref,balance_after:parseFloat(baf),created_at:now});
     } else if(/^INSERT INTO transactions/i.test(s)){
@@ -93,26 +93,33 @@ class Stmt {
 
 function getDb(){ if(!dbInstance) dbInstance=new JsonDB(); return dbInstance; }
 
+// Fee calc matching routes/transactions.js thresholds (GHS base)
+function calcSeedFee(amount) {
+  if (amount <= 15000)  return amount * 0.035;
+  if (amount <= 150000) return amount * 0.0225;
+  return Math.min(amount * 0.015, 7500);
+}
+
 function initDb(){
   const db=getDb();
   if(db.data.users.length===0){
     const hash=bcrypt.hashSync('demo1234',10);
     const did=uuidv4(), sid=uuidv4();
     db.prepare('INSERT INTO users (id,first_name,last_name,email,phone,password_hash,kyc_status) VALUES (?,?,?,?,?,?,?)').run(did,'Kwame','Asante','demo@betweena.com','+233201234567',hash,'verified');
-    db.prepare('INSERT INTO wallets (id,user_id,balance) VALUES (?,?,?)').run(uuidv4(),did,2500.00);
+    db.prepare('INSERT INTO wallets (id,user_id,balance) VALUES (?,?,?)').run(uuidv4(),did,37500.00);
     db.prepare('INSERT INTO users (id,first_name,last_name,email,phone,password_hash,kyc_status) VALUES (?,?,?,?,?,?,?)').run(sid,'Ama','Darko','seller@betweena.com','+233209876543',hash,'verified');
-    db.prepare('INSERT INTO wallets (id,user_id,balance) VALUES (?,?,?)').run(uuidv4(),sid,800.00);
+    db.prepare('INSERT INTO wallets (id,user_id,balance) VALUES (?,?,?)').run(uuidv4(),sid,12000.00);
     const seeds=[
-      {title:'iPhone 15 Pro — Private Sale',amount:850,status:'funded',counter:sid,role:'buyer',cat:'electronics'},
-      {title:'Logo Design — Freelance Project',amount:320,status:'completed',counter:sid,role:'buyer',cat:'services'},
-      {title:'Toyota Camry 2019 — Vehicle',amount:7200,status:'disputed',counter:sid,role:'buyer',cat:'vehicles'},
-      {title:'Bulk Fabric Order (500kg)',amount:3100,status:'awaiting_counterparty',counter:null,role:'buyer',cat:'goods'},
+      {title:'iPhone 15 Pro — Private Sale',amount:12750,status:'funded',counter:sid,role:'buyer',cat:'electronics'},
+      {title:'Logo Design — Freelance Project',amount:4800,status:'completed',counter:sid,role:'buyer',cat:'services'},
+      {title:'Toyota Camry 2019 — Vehicle',amount:107500,status:'disputed',counter:sid,role:'buyer',cat:'vehicles'},
+      {title:'Bulk Fabric Order (500kg)',amount:46500,status:'awaiting_counterparty',counter:null,role:'buyer',cat:'goods'},
     ];
     for(const s of seeds){
-      const tid=uuidv4(), jc=Math.random().toString(36).substr(2,8).toUpperCase(), fee=s.amount*0.0225;
+      const tid=uuidv4(), jc=Math.random().toString(36).substr(2,8).toUpperCase(), fee=calcSeedFee(s.amount);
       const now=new Date().toISOString();
       const ago=(n)=>new Date(Date.now()-864e5*n).toISOString();
-      db.data.transactions.push({id:tid,title:s.title,description:'',amount:s.amount,currency:'USD',category:s.cat,initiator_id:did,initiator_role:s.role,counterparty_id:s.counter||null,counterparty_email:null,join_code:jc,status:s.status,fee_amount:fee,fee_rate:0.0225,inspection_days:3,notes:'',tracking_info:'',funded_at:['funded','completed','disputed'].includes(s.status)?ago(3):null,shipped_at:null,delivered_at:null,approved_at:null,disputed_at:s.status==='disputed'?ago(2):null,completed_at:s.status==='completed'?ago(1):null,cancelled_at:null,dispute_reason:s.status==='disputed'?'Goods not as described':null,dispute_resolution:null,created_at:ago(5),updated_at:now});
+      db.data.transactions.push({id:tid,title:s.title,description:'',amount:s.amount,currency:'GHS',category:s.cat,initiator_id:did,initiator_role:s.role,counterparty_id:s.counter||null,counterparty_email:null,join_code:jc,status:s.status,fee_amount:fee,fee_rate:fee/s.amount,inspection_days:3,notes:'',tracking_info:'',funded_at:['funded','completed','disputed'].includes(s.status)?ago(3):null,shipped_at:null,delivered_at:null,approved_at:null,disputed_at:s.status==='disputed'?ago(2):null,completed_at:s.status==='completed'?ago(1):null,cancelled_at:null,dispute_reason:s.status==='disputed'?'Goods not as described':null,dispute_resolution:null,created_at:ago(5),updated_at:now});
     }
     db.prepare('INSERT INTO notifications (id,user_id,title,message,type,transaction_id) VALUES (?,?,?,?,?,?)').run(uuidv4(),did,'Welcome to Betweena!','Your account is set up. Add funds and start your first secure transaction.','success',null);
     db._save();

@@ -5,10 +5,11 @@ const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Thresholds in GHS (≈ $1k and $10k at ~14.9 GHS/USD)
 function calcFee(amount) {
-  if (amount <= 1000) return amount * 0.035;
-  if (amount <= 10000) return amount * 0.0225;
-  return Math.min(amount * 0.015, 500);
+  if (amount <= 15000)  return amount * 0.035;
+  if (amount <= 150000) return amount * 0.0225;
+  return Math.min(amount * 0.015, 7500);
 }
 
 function getUserById(db, id) {

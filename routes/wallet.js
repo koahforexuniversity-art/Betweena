@@ -33,7 +33,7 @@ router.post('/deposit', authMiddleware, (req, res) => {
     .run(txnId, wallet.id, 'deposit', amount, `Deposit via ${method || 'Mobile Money'}`, `DEP-${Date.now()}`, newBalance);
 
   db.prepare(`INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, ?)`)
-    .run(uuidv4(), req.user.id, 'Deposit Successful', `$${parseFloat(amount).toFixed(2)} added to your wallet.`, 'success');
+    .run(uuidv4(), req.user.id, 'Deposit Successful', `₵${parseFloat(amount).toFixed(2)} added to your wallet.`, 'success');
 
   res.json({ balance: newBalance, transaction_id: txnId });
 });
@@ -57,7 +57,7 @@ router.post('/withdraw', authMiddleware, (req, res) => {
     .run(txnId, wallet.id, 'withdrawal', -amount, `Withdrawal to ${method || 'Mobile Money'} ${account_number || ''}`, `WIT-${Date.now()}`, newBalance);
 
   db.prepare(`INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, ?)`)
-    .run(uuidv4(), req.user.id, 'Withdrawal Initiated', `$${parseFloat(amount).toFixed(2)} will arrive within 24 hours.`, 'info');
+    .run(uuidv4(), req.user.id, 'Withdrawal Initiated', `₵${parseFloat(amount).toFixed(2)} will arrive within 24 hours.`, 'info');
 
   res.json({ balance: newBalance, transaction_id: txnId });
 });
