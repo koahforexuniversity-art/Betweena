@@ -10,7 +10,7 @@ class JsonDB {
   constructor() { this.data = this._load(); }
   _load() {
     if (fs.existsSync(DB_PATH)) { try { return JSON.parse(fs.readFileSync(DB_PATH,'utf8')); } catch(e){} }
-    return { users:[], wallets:[], wallet_transactions:[], transactions:[], transaction_messages:[], notifications:[] };
+    return { users:[], wallets:[], wallet_transactions:[], transactions:[], transaction_messages:[], notifications:[], fundraisers:[], fundraiser_donations:[] };
   }
   _save() { fs.writeFileSync(DB_PATH, JSON.stringify(this.data)); }
   pragma(){}
@@ -54,6 +54,16 @@ class Stmt {
       const [status,id]=p; const t=d.transactions.find(t=>t.id===id); if(t){t.status=status;t.cancelled_at=now;t.updated_at=now;}
     } else if(/^UPDATE notifications SET read/i.test(s)){
       const [uid]=p; d.notifications.filter(n=>n.user_id===uid).forEach(n=>n.read=1);
+    } else if(/^INSERT INTO fundraisers/i.test(s)){
+      const [id,title,desc,goal,currency,cat,cid,org,end_date]=p;
+      d.fundraisers.push({id,title,description:desc,goal_amount:parseFloat(goal),raised_amount:0,currency:currency||'GHS',category:cat,creator_id:cid,organization_name:org||'',end_date,status:'active',donor_count:0,created_at:now,updated_at:now});
+    } else if(/^INSERT INTO fundraiser_donations/i.test(s)){
+      const [id,fid,did,amt,msg,anon]=p;
+      d.fundraiser_donations.push({id,fundraiser_id:fid,donor_id:did,amount:parseFloat(amt),message:msg||'',anonymous:!!anon,created_at:now});
+    } else if(/^UPDATE fundraisers SET raised_amount/i.test(s)){
+      const [raised,count,id]=p; const f=d.fundraisers.find(f=>f.id===id); if(f){f.raised_amount=parseFloat(raised);f.donor_count=parseInt(count);f.updated_at=now;}
+    } else if(/^UPDATE fundraisers SET status/i.test(s)){
+      const [status,id]=p; const f=d.fundraisers.find(f=>f.id===id); if(f){f.status=status;f.updated_at=now;}
     }
     this.db._save(); return {changes:1};
   }
@@ -70,6 +80,7 @@ class Stmt {
     if(/FROM transactions WHERE id/i.test(s)) return d.transactions.find(t=>t.id===p[0]);
     if(/FROM transactions WHERE join_code/i.test(s)) return d.transactions.find(t=>t.join_code===p[0]);
     if(/COUNT.*notifications.*read\s*=\s*0/i.test(s)) return {count:d.notifications.filter(n=>n.user_id===p[0]&&n.read===0).length};
+    if(/FROM fundraisers WHERE id/i.test(s)) return d.fundraisers.find(f=>f.id===p[0]);
     return undefined;
   }
   all(...a){
@@ -86,6 +97,12 @@ class Stmt {
     }
     if(/FROM notifications WHERE user_id/i.test(s)){
       return d.notifications.filter(n=>n.user_id===p[0]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,30);
+    }
+    if(/FROM fundraisers WHERE creator_id/i.test(s)) return d.fundraisers.filter(f=>f.creator_id===p[0]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    if(/FROM fundraisers/i.test(s)) return d.fundraisers.filter(f=>f.status==='active').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    if(/FROM fundraiser_donations WHERE fundraiser_id/i.test(s)){
+      return d.fundraiser_donations.filter(don=>don.fundraiser_id===p[0]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+        .map(don=>{ const u=d.users.find(u=>u.id===don.donor_id); return{...don,donor_name:don.anonymous?'Anonymous':`${u?.first_name||''} ${u?.last_name||''}`.trim()}; });
     }
     return [];
   }
@@ -122,6 +139,18 @@ function initDb(){
       db.data.transactions.push({id:tid,title:s.title,description:'',amount:s.amount,currency:'GHS',category:s.cat,initiator_id:did,initiator_role:s.role,counterparty_id:s.counter||null,counterparty_email:null,join_code:jc,status:s.status,fee_amount:fee,fee_rate:fee/s.amount,inspection_days:3,notes:'',tracking_info:'',funded_at:['funded','completed','disputed'].includes(s.status)?ago(3):null,shipped_at:null,delivered_at:null,approved_at:null,disputed_at:s.status==='disputed'?ago(2):null,completed_at:s.status==='completed'?ago(1):null,cancelled_at:null,dispute_reason:s.status==='disputed'?'Goods not as described':null,dispute_resolution:null,created_at:ago(5),updated_at:now});
     }
     db.prepare('INSERT INTO notifications (id,user_id,title,message,type,transaction_id) VALUES (?,?,?,?,?,?)').run(uuidv4(),did,'Welcome to Betweena!','Your account is set up. Add funds and start your first secure transaction.','success',null);
+
+    // Seed NGO fundraisers
+    const fseeds=[
+      {title:'School Feeding Programme — Northern Ghana',org:'Nkosuo Education Foundation',desc:'Help us feed 500 schoolchildren daily so they stay in class and learn. Hunger is the #1 reason for school dropouts in our community.',goal:75000,cat:'education',end:new Date(Date.now()+30*864e5).toISOString(),raised:38250,donors:47},
+      {title:'Clean Water Boreholes — Volta Region',org:'WaterLife Ghana NGO',desc:'Drilling 3 boreholes to bring safe drinking water to 3 villages that currently walk 8km daily to the nearest water source.',goal:120000,cat:'health',end:new Date(Date.now()+45*864e5).toISOString(),raised:62400,donors:89},
+      {title:'Flood Relief — Accra Disaster Response',org:'Ghana Red Crescent Aid',desc:'Emergency relief for 1,200 families displaced by the recent Accra floods. Funds cover food, shelter kits, and hygiene supplies.',goal:200000,cat:'disaster',end:new Date(Date.now()+15*864e5).toISOString(),raised:184500,donors:312},
+    ];
+    for(const fs of fseeds){
+      const fid=uuidv4();
+      db.prepare('INSERT INTO fundraisers (id,title,description,goal_amount,currency,category,creator_id,organization_name,end_date) VALUES (?,?,?,?,?,?,?,?,?)').run(fid,fs.title,fs.desc,fs.goal,'GHS',fs.cat,sid,fs.org,fs.end);
+      db.prepare('UPDATE fundraisers SET raised_amount = ?, donor_count = ? WHERE id = ?').run(fs.raised,fs.donors,fid);
+    }
     db._save();
     console.log('✅ Seeded. Login: demo@betweena.com / demo1234');
   }

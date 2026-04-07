@@ -246,6 +246,28 @@ a{color:inherit;text-decoration:none;}
   .p-arrow{display:none;}
 }
 
+/* FUNDRAISER CARDS */
+.campaign-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-bottom:1.5rem;}
+.campaign-card{background:var(--w);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all var(--tr);}
+.campaign-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,107,92,0.1);}
+.campaign-img{height:130px;display:flex;align-items:center;justify-content:center;font-size:3rem;}
+.campaign-body{padding:1rem 1.25rem;}
+.campaign-org{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--t);margin-bottom:0.25rem;}
+.campaign-title{font-size:0.95rem;font-weight:700;margin-bottom:0.5rem;line-height:1.4;}
+.campaign-desc{font-size:0.78rem;color:var(--m);line-height:1.5;margin-bottom:0.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.progress-bar-wrap{background:#E8F5F2;border-radius:100px;height:7px;margin-bottom:0.5rem;overflow:hidden;}
+.progress-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--t),var(--tm));transition:width 0.5s ease;}
+.progress-bar-fill.urgent{background:linear-gradient(90deg,#E65100,#FF7043);}
+.progress-bar-fill.complete{background:linear-gradient(90deg,#1B5E20,#43A047);}
+.campaign-stats{display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--m);}
+.campaign-raised{font-weight:700;color:var(--t);font-size:0.88rem;}
+.campaign-cat{display:inline-flex;align-items:center;gap:0.25rem;padding:0.15rem 0.5rem;border-radius:100px;font-size:0.65rem;font-weight:700;background:var(--tl);color:var(--t);}
+
+/* PROGRESS RING (detail page) */
+.goal-block{text-align:center;padding:1.5rem;background:var(--tl);border-radius:var(--r);}
+.goal-pct{font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;color:var(--t);}
+.goal-label{font-size:0.78rem;color:var(--m);margin-top:0.25rem;}
+
 /* CURRENCY SELECT */
 .currency-select{padding:0.35rem 0.65rem;border-radius:8px;border:1.5px solid var(--bd);font-size:0.8rem;font-weight:600;color:var(--ink2);background:var(--w);cursor:pointer;outline:none;}
 .currency-select:focus{border-color:var(--t);}
@@ -296,6 +318,7 @@ a{color:inherit;text-decoration:none;}
     <div class="sb-item" data-page="transactions"><span class="icon">↔</span>Transactions<span class="sb-badge" id="active-badge" style="display:none">0</span></div>
     <div class="sb-item" data-page="new-transaction"><span class="icon">＋</span>New Escrow</div>
     <div class="sb-item" data-page="join"><span class="icon">🔑</span>Join with Code</div>
+    <div class="sb-item" data-page="fundraisers"><span class="icon">❤️</span>NGO Fundraisers</div>
     <div class="sb-section">Account</div>
     <div class="sb-item" data-page="wallet"><span class="icon">💳</span>Wallet</div>
     <div class="sb-item" data-page="notifications"><span class="icon">🔔</span>Notifications<span class="sb-badge" id="notif-badge" style="display:none">0</span></div>
@@ -482,11 +505,11 @@ function showApp() {
 function navigate(page, data) {
   currentPage = page;
   document.querySelectorAll('.sb-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
-  const titles = { dashboard:'Dashboard', transactions:'My Transactions', disputes:'Disputes', 'new-transaction':'New Escrow Transaction', join:'Join Transaction', wallet:'Wallet', notifications:'Notifications', profile:'Profile', 'transaction-detail':'Transaction Details' };
+  const titles = { dashboard:'Dashboard', transactions:'My Transactions', disputes:'Disputes', 'new-transaction':'New Escrow Transaction', join:'Join Transaction', wallet:'Wallet', notifications:'Notifications', profile:'Profile', 'transaction-detail':'Transaction Details', fundraisers:'NGO Fundraisers', 'fundraiser-detail':'Campaign Details', 'create-fundraiser':'Create Campaign' };
   document.getElementById('topbar-title').textContent = titles[page] || 'Betweena';
   const pageEl = document.getElementById('page');
   pageEl.innerHTML = '<div style="display:flex;justify-content:center;padding:3rem"><div class="spinner spinner-dark"></div></div>';
-  const pages = { dashboard: renderDashboard, transactions: () => renderTransactions(data), disputes: () => renderTransactions('disputed'), 'new-transaction': renderNewTransaction, join: renderJoin, wallet: renderWallet, notifications: renderNotifications, profile: renderProfile, 'transaction-detail': () => renderTransactionDetail(data) };
+  const pages = { dashboard: renderDashboard, transactions: () => renderTransactions(data), disputes: () => renderTransactions('disputed'), 'new-transaction': renderNewTransaction, join: renderJoin, wallet: renderWallet, notifications: renderNotifications, profile: renderProfile, 'transaction-detail': () => renderTransactionDetail(data), fundraisers: renderFundraisers, 'fundraiser-detail': () => renderFundraiserDetail(data), 'create-fundraiser': renderCreateFundraiser };
   if (pages[page]) pages[page]();
   else pageEl.innerHTML = '<div class="empty"><div class="empty-icon">🚧</div><div class="empty-title">Coming Soon</div></div>';
   // Close mobile sidebar
@@ -613,11 +636,12 @@ async function renderTransactions(defaultFilter) {
         <button class="btn btn-primary" onclick="navigate('new-transaction')">+ New Escrow</button>
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
-        ${['all','active','completed','disputed'].map(f=>`<button class="btn btn-ghost btn-sm" id="filter-${f}" onclick="filterTx('${f}')" style="${f===activeFilter?'background:var(--tl);color:var(--t);border-color:var(--t);':''}">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+        ${['all','active','completed','disputed','cancelled'].map(f=>`<button class="btn btn-ghost btn-sm" id="filter-${f}" onclick="filterTx('${f}')" style="${f===activeFilter?'background:var(--tl);color:var(--t);border-color:var(--t);':''}">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
       </div>
       <div class="card" style="padding:0;">
-        ${txns.length === 0 ? `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div><button class="btn btn-primary" style="margin-top:1rem;" onclick="navigate('new-transaction')">Create your first escrow</button></div>` :
-        `<div class="tx-list" id="tx-list">${txns.map(renderTxRow).join('')}</div>`}
+        ${txns.length === 0
+          ? `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No transactions yet</div><button class="btn btn-primary" style="margin-top:1rem;" onclick="navigate('new-transaction')">Create your first escrow</button></div>`
+          : `<div class="tx-list" id="tx-list">${txns.map(renderTxRow).join('')}</div>`}
       </div>`;
     window._allTxns = txns;
     if (activeFilter !== 'all') filterTx(activeFilter);
@@ -625,9 +649,18 @@ async function renderTransactions(defaultFilter) {
 }
 
 function filterTx(f) {
+  const listEl = document.getElementById('tx-list');
+  if (!listEl) return;
   const txns = window._allTxns || [];
-  const filtered = f==='all' ? txns : f==='active' ? txns.filter(t=>!['completed','cancelled'].includes(t.status)) : txns.filter(t=>t.status===f);
-  document.getElementById('tx-list').innerHTML = filtered.length ? filtered.map(renderTxRow).join('') : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No ${f} transactions</div></div>`;
+  const filtered = f === 'all' ? txns
+    : f === 'active'    ? txns.filter(t => !['completed','cancelled','disputed'].includes(t.status))
+    : f === 'disputed'  ? txns.filter(t => t.status === 'disputed')
+    : f === 'completed' ? txns.filter(t => t.status === 'completed')
+    : f === 'cancelled' ? txns.filter(t => t.status === 'cancelled')
+    : txns.filter(t => t.status === f);
+  listEl.innerHTML = filtered.length
+    ? filtered.map(renderTxRow).join('')
+    : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No ${f} transactions</div></div>`;
   document.querySelectorAll('[id^=filter-]').forEach(b => b.style.cssText = '');
   const active = document.getElementById(`filter-${f}`);
   if (active) active.style.cssText = 'background:var(--tl);color:var(--t);border-color:var(--t);';
@@ -1174,6 +1207,196 @@ async function saveProfile() {
     updateSidebarUser();
     showToast('Profile updated!', 'success');
   } catch(e) { showToast(e.message,'error'); }
+}
+
+// ============= NGO FUNDRAISERS =============
+const CAT_META = {
+  education:{ icon:'📚', label:'Education',   color:'#E3F2FD' },
+  health:   { icon:'🏥', label:'Health',       color:'#FCE4EC' },
+  disaster: { icon:'🆘', label:'Disaster Relief', color:'#FFF3E0' },
+  community:{ icon:'🤝', label:'Community',   color:'#F3E5F5' },
+  other:    { icon:'❤️', label:'NGO / Other',  color:'#E8F5F2' },
+};
+
+async function renderFundraisers() {
+  try {
+    const campaigns = await api('GET', '/fundraisers');
+    const el = document.getElementById('page');
+    el.innerHTML = `
+      <div class="page-header">
+        <div><div class="page-title">NGO Fundraisers</div><div class="page-sub">${campaigns.length} active campaign${campaigns.length!==1?'s':''}</div></div>
+        <button class="btn btn-primary" onclick="navigate('create-fundraiser')">+ Create Campaign</button>
+      </div>
+      ${campaigns.length === 0 ? `<div class="empty"><div class="empty-icon">❤️</div><div class="empty-title">No active campaigns</div><div class="empty-sub">Be the first to start a fundraiser</div><button class="btn btn-primary" style="margin-top:1rem;" onclick="navigate('create-fundraiser')">Create Campaign</button></div>` :
+      `<div class="campaign-grid">${campaigns.map(renderCampaignCard).join('')}</div>`}`;
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function renderCampaignCard(f) {
+  const cm = CAT_META[f.category] || CAT_META.other;
+  const pct = f.percent || 0;
+  const fillClass = f.status==='completed'?'complete':f.days_left<=5?'urgent':'';
+  return `<div class="campaign-card" onclick="navigate('fundraiser-detail','${f.id}')">
+    <div class="campaign-img" style="background:${cm.color}">${cm.icon}</div>
+    <div class="campaign-body">
+      <div class="campaign-org">${escHtml(f.organization_name||'NGO')}</div>
+      <div class="campaign-title">${escHtml(f.title)}</div>
+      <div class="campaign-desc">${escHtml(f.description)}</div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+      <div class="campaign-stats">
+        <div><div class="campaign-raised">${fmt(f.raised_amount)}</div><div style="font-size:0.7rem;">raised of ${fmt(f.goal_amount)}</div></div>
+        <div style="text-align:right;"><div style="font-weight:700;">${pct}%</div><div>${f.days_left>0?f.days_left+' days left':'Ended'}</div></div>
+      </div>
+      <div style="margin-top:0.6rem;display:flex;justify-content:space-between;align-items:center;">
+        <span class="campaign-cat">${cm.icon} ${cm.label}</span>
+        <span style="font-size:0.72rem;color:var(--m);">${f.donor_count} donor${f.donor_count!==1?'s':''}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function renderFundraiserDetail(fId) {
+  if (!fId) { navigate('fundraisers'); return; }
+  try {
+    const f = await api('GET', `/fundraisers/${fId}`);
+    const cm = CAT_META[f.category] || CAT_META.other;
+    const pct = f.percent || 0;
+    const fillClass = f.status==='completed'?'complete':f.days_left<=5?'urgent':'';
+    const isCreator = f.creator_id === user?.id;
+    document.getElementById('page').innerHTML = `
+      <button class="btn btn-ghost btn-sm" style="margin-bottom:1rem;" onclick="navigate('fundraisers')">← Back to Campaigns</button>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start;">
+        <div>
+          <div class="card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
+            <div style="height:180px;background:${cm.color};display:flex;align-items:center;justify-content:center;font-size:5rem;">${cm.icon}</div>
+            <div style="padding:1.5rem;">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <span class="campaign-cat">${cm.icon} ${cm.label}</span>
+                ${f.status==='completed'?'<span class="badge badge-completed">Goal Reached!</span>':f.days_left<=5&&f.days_left>0?'<span class="badge badge-disputed">Ending Soon</span>':''}
+              </div>
+              <div style="font-size:0.8rem;font-weight:700;color:var(--t);margin-bottom:0.35rem;">${escHtml(f.organization_name||'NGO')}</div>
+              <div style="font-family:\'Playfair Display\',serif;font-size:1.4rem;font-weight:700;margin-bottom:1rem;">${escHtml(f.title)}</div>
+              <p style="font-size:0.88rem;color:var(--m);line-height:1.7;">${escHtml(f.description)}</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title-sm" style="margin-bottom:0.75rem;">Recent Donors (${f.donor_count})</div>
+            ${f.donations && f.donations.length ? f.donations.slice(0,10).map(d=>`
+              <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid var(--bd);">
+                <div style="width:34px;height:34px;border-radius:50%;background:var(--tl);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--t);flex-shrink:0;">${d.anonymous?'?':d.donor_name[0]||'?'}</div>
+                <div style="flex:1;"><div style="font-size:0.85rem;font-weight:600;">${escHtml(d.donor_name)}</div>${d.message?`<div style="font-size:0.75rem;color:var(--m);">"${escHtml(d.message)}"</div>`:''}</div>
+                <div style="text-align:right;"><div style="font-weight:700;color:var(--t);font-size:0.88rem;">${fmt(d.amount)}</div><div style="font-size:0.68rem;color:var(--ml);">${timeAgo(d.created_at)}</div></div>
+              </div>`).join('') : '<div style="font-size:0.85rem;color:var(--m);padding:1rem 0;">No donations yet. Be the first!</div>'}
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:1rem;">
+            <div class="goal-block" style="margin-bottom:1rem;">
+              <div class="goal-pct">${pct}%</div>
+              <div class="goal-label">of goal raised</div>
+            </div>
+            <div class="progress-bar-wrap" style="height:10px;margin-bottom:1rem;"><div class="progress-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+            ${row('Raised', `<strong style="color:var(--t)">${fmt(f.raised_amount)}</strong>`)}
+            ${row('Goal', fmt(f.goal_amount))}
+            ${row('Donors', f.donor_count)}
+            ${row('Days Left', f.days_left > 0 ? f.days_left + ' days' : 'Campaign ended')}
+            ${row('By', escHtml(f.organization_name||'—'))}
+            ${f.status==='active' && f.days_left>0 ? `
+            <button class="btn btn-primary btn-full" style="margin-top:1rem;" onclick="openDonateModal('${f.id}','${escHtml(f.title)}',${f.goal_amount-f.raised_amount})">❤️ Donate Now</button>` : `
+            <div style="margin-top:1rem;text-align:center;font-size:0.82rem;color:var(--m);padding:0.75rem;background:var(--s);border-radius:8px;">${f.status==='completed'?'🎉 Goal reached! Campaign closed.':'Campaign has ended.'}</div>`}
+            ${isCreator && f.status==='active' ? `<button class="btn btn-ghost btn-full btn-sm" style="margin-top:0.5rem;" onclick="closeCampaign('${f.id}')">Close Campaign</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+  } catch(e) { document.getElementById('page').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">${e.message}</div></div>`; }
+}
+
+function renderCreateFundraiser() {
+  document.getElementById('page').innerHTML = `
+    <div class="page-header"><div><div class="page-title">Create a Campaign</div><div class="page-sub">Launch an NGO fundraiser on Betweena — funds held securely until disbursed.</div></div></div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start;">
+      <div class="card">
+        <div class="form-group"><label class="form-label">Campaign Title *</label><input class="form-input" id="cf-title" placeholder="e.g. Clean Water for Volta Region Villages"></div>
+        <div class="form-group"><label class="form-label">Organization / NGO Name *</label><input class="form-input" id="cf-org" placeholder="e.g. WaterLife Ghana NGO"></div>
+        <div class="form-group"><label class="form-label">Description *</label><textarea class="form-input" id="cf-desc" rows="4" placeholder="Describe your cause, how funds will be used, and the impact..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fundraising Goal (GHS) *</label>
+            <input class="form-input" id="cf-goal" type="number" min="100" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input form-select" id="cf-cat">
+              <option value="education">📚 Education</option>
+              <option value="health">🏥 Health</option>
+              <option value="disaster">🆘 Disaster Relief</option>
+              <option value="community">🤝 Community Development</option>
+              <option value="other">❤️ Other NGO</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Campaign End Date *</label><input class="form-input" id="cf-end" type="date" min="${new Date().toISOString().split('T')[0]}"></div>
+        <div id="cf-err" class="form-error" style="display:none;margin-bottom:0.75rem;"></div>
+        <button class="btn btn-primary btn-full btn-lg" id="cf-btn" onclick="createCampaign()">Launch Campaign →</button>
+      </div>
+      <div class="card" style="background:var(--tl);border-color:rgba(0,107,92,0.2);">
+        <div style="font-weight:700;font-size:0.88rem;color:var(--t);margin-bottom:1rem;">How campaigns work</div>
+        ${['Create your campaign with a clear goal and end date','Share the link — donors contribute directly from their wallets','Funds are held securely on the platform','At goal or end date, close the campaign to access funds','All donations are tracked and transparent'].map((s,i)=>`<div style="display:flex;gap:0.6rem;margin-bottom:0.65rem;font-size:0.8rem;"><div style="width:20px;height:20px;border-radius:50%;background:var(--t);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${i+1}</div><div style="color:var(--ink2);padding-top:2px;">${s}</div></div>`).join('')}
+      </div>
+    </div>`;
+}
+
+async function createCampaign() {
+  const title = document.getElementById('cf-title').value.trim();
+  const org   = document.getElementById('cf-org').value.trim();
+  const desc  = document.getElementById('cf-desc').value.trim();
+  const goal  = parseFloat(document.getElementById('cf-goal').value);
+  const cat   = document.getElementById('cf-cat').value;
+  const end   = document.getElementById('cf-end').value;
+  const btn   = document.getElementById('cf-btn');
+  if (!title || !org || !desc || !goal || !end) { showError('cf-err','All fields are required'); return; }
+  if (goal < 100) { showError('cf-err','Goal must be at least ₵100'); return; }
+  btn.innerHTML = '<span class="spinner"></span> Launching...'; btn.disabled = true;
+  try {
+    const f = await api('POST', '/fundraisers/create', { title, organization_name: org, description: desc, goal_amount: goal, category: cat, end_date: new Date(end).toISOString() });
+    showToast('🎉 Campaign launched!', 'success');
+    navigate('fundraiser-detail', f.id);
+  } catch(e) { showError('cf-err', e.message); btn.innerHTML = 'Launch Campaign →'; btn.disabled = false; }
+}
+
+function openDonateModal(fId, fTitle, remaining) {
+  openModal('Donate to Campaign', `
+    <div style="font-size:0.85rem;color:var(--m);margin-bottom:1rem;">Supporting: <strong>${escHtml(fTitle)}</strong></div>
+    <div class="form-group"><label class="form-label">Amount (GHS) *</label><input class="form-input" id="don-amt" type="number" min="1" placeholder="Enter amount in GHS"></div>
+    <div class="form-group"><label class="form-label">Message (optional)</label><input class="form-input" id="don-msg" placeholder="Words of encouragement..."></div>
+    <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="don-anon"><label for="don-anon" style="font-size:0.85rem;cursor:pointer;">Donate anonymously</label></div>
+    <div style="background:var(--tl);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.78rem;color:var(--t);margin-bottom:1rem;">Your wallet balance: <strong>${fmt(user?.wallet_balance||0)}</strong></div>
+    <button class="btn btn-primary btn-full" onclick="doDonate('${fId}')">❤️ Confirm Donation</button>`);
+}
+
+async function doDonate(fId) {
+  const amt  = parseFloat(document.getElementById('don-amt')?.value);
+  const msg  = document.getElementById('don-msg')?.value.trim();
+  const anon = document.getElementById('don-anon')?.checked;
+  if (!amt || amt <= 0) { showToast('Enter a valid amount', 'error'); return; }
+  try {
+    const r = await api('POST', `/fundraisers/${fId}/donate`, { amount: amt, message: msg, anonymous: anon });
+    user.wallet_balance = r.balance;
+    localStorage.setItem('bt_user', JSON.stringify(user));
+    updateSidebarUser();
+    showToast(`❤️ Thank you! ${fmt(amt)} donated.`, 'success');
+    closeModal();
+    navigate('fundraiser-detail', fId);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function closeCampaign(fId) {
+  if (!confirm('Close this campaign? Donors will no longer be able to contribute.')) return;
+  try {
+    await api('POST', `/fundraisers/${fId}/close`);
+    showToast('Campaign closed.', 'success');
+    navigate('fundraiser-detail', fId);
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 // ============= MODAL =============

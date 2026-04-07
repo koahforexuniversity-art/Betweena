@@ -57,6 +57,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/fundraisers', require('./routes/fundraisers'));
 
 // Health check
 app.get('/api/health', (req, res) => {
