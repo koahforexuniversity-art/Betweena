@@ -1125,6 +1125,12 @@ function showError(id, msg) { const el=document.getElementById(id); if(el){el.te
 
 // ============= INIT =============
 document.addEventListener('DOMContentLoaded', () => {
+  // Sidebar navigation — delegate clicks on .sb-item elements
+  document.getElementById('sidebar').addEventListener('click', e => {
+    const item = e.target.closest('.sb-item');
+    if (item && item.dataset.page) navigate(item.dataset.page);
+  });
+
   setTimeout(() => {
     document.getElementById('loading-screen').style.display = 'none';
     if (token && user) { showApp(); }
