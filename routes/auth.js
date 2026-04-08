@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database');
-const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
+const { authMiddleware, JWT_SECRET, JWT_ISSUER } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -40,7 +40,7 @@ router.post('/register', (req, res) => {
   db.prepare(`INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, ?)`)
     .run(uuidv4(), userId, 'Welcome to Betweena!', 'Your account is set up. Add funds to your wallet and start your first secure transaction.', 'success');
 
-  const token = jwt.sign({ id: userId, email: email.toLowerCase() }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ id: userId, email: email.toLowerCase() }, JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d', issuer: JWT_ISSUER });
   const user = db.prepare('SELECT id, first_name, last_name, email, phone, kyc_status, created_at FROM users WHERE id = ?').get(userId);
   const wallet = db.prepare('SELECT balance FROM wallets WHERE user_id = ?').get(userId);
 
@@ -59,7 +59,7 @@ router.post('/login', (req, res) => {
   const valid = bcrypt.compareSync(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d', issuer: JWT_ISSUER });
   const wallet = db.prepare('SELECT balance FROM wallets WHERE user_id = ?').get(user.id);
   const unread = db.prepare('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND read = 0').get(user.id);
 
