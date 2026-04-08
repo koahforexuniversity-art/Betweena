@@ -283,6 +283,137 @@ a{color:inherit;text-decoration:none;}
 
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
 .section-title-sm{font-size:0.9rem;font-weight:700;color:var(--ink2);}
+
+/* ========== LANDING PAGE ========== */
+#landing-page{display:none;flex-direction:column;min-height:100vh;background:var(--w);}
+
+/* Navbar */
+.lp-nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 5%;position:sticky;top:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd);z-index:100;}
+.lp-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--t);}
+.lp-logo span{color:var(--g);}
+.lp-nav-links{display:flex;gap:2rem;list-style:none;}
+.lp-nav-links a{font-size:0.88rem;font-weight:500;color:var(--ink2);transition:color var(--tr);}
+.lp-nav-links a:hover{color:var(--t);}
+.lp-nav-btns{display:flex;gap:0.75rem;align-items:center;}
+.btn-lp-ghost{padding:0.45rem 1.1rem;border-radius:8px;border:1.5px solid var(--bd);background:transparent;font-size:0.85rem;font-weight:600;color:var(--ink2);cursor:pointer;transition:all var(--tr);}
+.btn-lp-ghost:hover{border-color:var(--t);color:var(--t);}
+.btn-lp-primary{padding:0.5rem 1.25rem;border-radius:8px;border:none;background:var(--t);color:#fff;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all var(--tr);}
+.btn-lp-primary:hover{background:var(--td);transform:translateY(-1px);}
+
+/* Hero */
+.lp-hero{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;padding:5rem 5% 4rem;max-width:1200px;margin:0 auto;width:100%;}
+.lp-hero-tag{display:inline-flex;align-items:center;gap:0.4rem;background:var(--tl);color:var(--t);font-size:0.75rem;font-weight:700;padding:0.3rem 0.85rem;border-radius:100px;margin-bottom:1.25rem;}
+.lp-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:700;line-height:1.2;color:var(--ink);margin-bottom:1.1rem;}
+.lp-hero h1 span{color:var(--t);}
+.lp-hero p{font-size:1rem;color:var(--m);line-height:1.75;margin-bottom:1.75rem;max-width:480px;}
+.lp-hero-btns{display:flex;gap:0.85rem;flex-wrap:wrap;margin-bottom:2rem;}
+.lp-trust{display:flex;gap:1.25rem;flex-wrap:wrap;}
+.lp-trust-item{display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:600;color:var(--m);}
+.lp-trust-item span{color:var(--t);}
+
+/* Hero visual */
+.lp-hero-visual{position:relative;}
+.lp-mock-card{background:var(--w);border:1px solid var(--bd);border-radius:16px;padding:1.5rem;box-shadow:0 20px 60px rgba(0,107,92,0.12);}
+.lp-mock-card-accent{background:linear-gradient(135deg,var(--t),var(--tm));color:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.lp-mock-label{font-size:0.7rem;opacity:0.7;margin-bottom:0.25rem;}
+.lp-mock-amount{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;}
+.lp-mock-row{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--bd);font-size:0.82rem;}
+.lp-mock-row:last-child{border-bottom:none;}
+.lp-mock-badge{background:#E8F5E9;color:#2E7D32;font-size:0.68rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:100px;}
+.lp-float-badge{position:absolute;background:var(--w);border:1px solid var(--bd);border-radius:12px;padding:0.6rem 1rem;box-shadow:0 8px 24px rgba(0,0,0,0.1);display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;font-weight:600;}
+.lp-float-badge.top{top:-1rem;right:-1rem;}
+.lp-float-badge.bot{bottom:-1rem;left:-1rem;}
+
+/* Sections */
+.lp-section{padding:4.5rem 5%;max-width:1200px;margin:0 auto;width:100%;}
+.lp-section-full{padding:4.5rem 5%;background:var(--s);}
+.lp-section-full-inner{max-width:1200px;margin:0 auto;}
+.lp-section-label{font-size:0.72rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--t);margin-bottom:0.5rem;}
+.lp-section-title{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;color:var(--ink);margin-bottom:0.75rem;}
+.lp-section-sub{font-size:0.95rem;color:var(--m);max-width:520px;line-height:1.7;}
+
+/* How it works */
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:3rem;}
+.how-step{text-align:center;position:relative;}
+.how-step::after{content:'→';position:absolute;right:-0.75rem;top:1.5rem;font-size:1.2rem;color:var(--ml);}
+.how-step:last-child::after{display:none;}
+.how-num{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--t),var(--tm));color:#fff;font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;}
+.how-title{font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;}
+.how-desc{font-size:0.8rem;color:var(--m);line-height:1.6;}
+
+/* Features */
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3rem;}
+.feature-card{background:var(--w);border:1px solid var(--bd);border-radius:var(--r);padding:1.5rem;transition:all var(--tr);}
+.feature-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,107,92,0.08);border-color:var(--t);}
+.feature-icon{width:48px;height:48px;border-radius:12px;background:var(--tl);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:1rem;}
+.feature-title{font-size:0.95rem;font-weight:700;margin-bottom:0.4rem;}
+.feature-desc{font-size:0.82rem;color:var(--m);line-height:1.6;}
+
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;background:linear-gradient(135deg,var(--t),var(--td));border-radius:16px;padding:2.5rem;margin:0 5%;max-width:1200px;}
+.stat-item{text-align:center;color:#fff;}
+.stat-val{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:0.25rem;}
+.stat-lbl{font-size:0.78rem;opacity:0.7;}
+
+/* Currencies */
+.currency-chips{display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:2rem;justify-content:center;}
+.currency-chip{display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1.1rem;background:var(--w);border:1.5px solid var(--bd);border-radius:100px;font-size:0.85rem;font-weight:600;transition:all var(--tr);}
+.currency-chip:hover{border-color:var(--t);background:var(--tl);}
+.chip-flag{font-size:1.1rem;}
+
+/* NGO strip */
+.ngo-strip{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;padding:4rem 5%;background:linear-gradient(135deg,#0F1C19,#1D3A33);max-width:100%;}
+.ngo-strip-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;}
+.ngo-tag{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(245,166,35,0.2);color:var(--g);font-size:0.75rem;font-weight:700;padding:0.3rem 0.85rem;border-radius:100px;margin-bottom:1rem;}
+.ngo-title{font-family:'Playfair Display',serif;font-size:clamp(1.4rem,3vw,2rem);color:#fff;font-weight:700;margin-bottom:0.85rem;line-height:1.3;}
+.ngo-desc{font-size:0.9rem;color:rgba(255,255,255,0.6);line-height:1.75;margin-bottom:1.5rem;}
+.ngo-cards{display:flex;flex-direction:column;gap:0.75rem;}
+.ngo-mini-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;}
+.ngo-mini-icon{font-size:1.5rem;flex-shrink:0;}
+.ngo-mini-title{font-size:0.85rem;font-weight:600;color:#fff;margin-bottom:0.2rem;}
+.ngo-mini-prog{height:5px;background:rgba(255,255,255,0.15);border-radius:100px;overflow:hidden;margin-top:0.35rem;}
+.ngo-mini-fill{height:100%;border-radius:100px;background:var(--g);}
+.ngo-mini-meta{font-size:0.7rem;color:rgba(255,255,255,0.4);}
+
+/* CTA */
+.lp-cta{text-align:center;padding:5rem 5%;background:var(--tl);}
+.lp-cta h2{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.5rem);font-weight:700;margin-bottom:0.75rem;color:var(--ink);}
+.lp-cta p{font-size:0.95rem;color:var(--m);margin-bottom:2rem;}
+.btn-lp-xl{padding:0.85rem 2.5rem;border-radius:10px;border:none;background:var(--t);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;transition:all var(--tr);}
+.btn-lp-xl:hover{background:var(--td);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,107,92,0.3);}
+
+/* Footer */
+.lp-footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:3rem 5% 2rem;}
+.lp-footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2rem;}
+.lp-footer-logo{font-family:'Playfair Display',serif;font-size:1.3rem;color:#fff;font-weight:700;margin-bottom:0.5rem;}
+.lp-footer-logo span{color:var(--g);}
+.lp-footer-tagline{font-size:0.8rem;line-height:1.6;max-width:220px;}
+.lp-footer-col h4{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);margin-bottom:0.85rem;}
+.lp-footer-col a{display:block;font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:0.5rem;transition:color var(--tr);cursor:pointer;}
+.lp-footer-col a:hover{color:#fff;}
+.lp-footer-bottom{border-top:1px solid rgba(255,255,255,0.07);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;}
+
+/* Responsive landing */
+@media(max-width:900px){
+  .lp-hero{grid-template-columns:1fr;text-align:center;padding:3rem 5% 2rem;}
+  .lp-hero p{margin:0 auto 1.75rem;}
+  .lp-hero-btns{justify-content:center;}
+  .lp-trust{justify-content:center;}
+  .lp-hero-visual{display:none;}
+  .how-grid{grid-template-columns:1fr 1fr;}
+  .how-step::after{display:none;}
+  .feature-grid{grid-template-columns:1fr 1fr;}
+  .stats-bar{grid-template-columns:1fr 1fr;}
+  .ngo-strip-inner{grid-template-columns:1fr;}
+  .lp-footer-inner{grid-template-columns:1fr 1fr;}
+  .lp-nav-links{display:none;}
+}
+@media(max-width:600px){
+  .how-grid{grid-template-columns:1fr;}
+  .feature-grid{grid-template-columns:1fr;}
+  .stats-bar{grid-template-columns:1fr 1fr;padding:1.5rem;}
+  .stat-val{font-size:1.5rem;}
+}
 </style>
 </head>
 <body>
@@ -291,6 +422,238 @@ a{color:inherit;text-decoration:none;}
 <div id="loading-screen">
   <div class="loading-logo">Between<span>a</span></div>
   <div class="spinner spinner-dark"></div>
+</div>
+
+<!-- LANDING PAGE -->
+<div id="landing-page">
+  <!-- NAV -->
+  <nav class="lp-nav">
+    <div class="lp-logo">Between<span>a</span></div>
+    <ul class="lp-nav-links">
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#currencies">Currencies</a></li>
+      <li><a href="#ngo">Give Back</a></li>
+    </ul>
+    <div class="lp-nav-btns">
+      <button class="btn-lp-ghost" onclick="showAuth('login')">Log In</button>
+      <button class="btn-lp-primary" onclick="showAuth('register')">Get Started Free</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="lp-hero">
+    <div>
+      <div class="lp-hero-tag">🔒 Trusted Escrow for Africa</div>
+      <h1>Trade Safely.<br><span>Pay with Confidence.</span></h1>
+      <p>Betweena holds funds securely until both parties are satisfied — protecting buyers and sellers across Ghana and Africa. No more scams, no more risk.</p>
+      <div class="lp-hero-btns">
+        <button class="btn btn-primary btn-lg" onclick="showAuth('register')">Start for Free →</button>
+        <button class="btn btn-ghost btn-lg" onclick="showAuth('login')">Log In</button>
+      </div>
+      <div class="lp-trust">
+        <div class="lp-trust-item"><span>✓</span> Zero risk for buyers</div>
+        <div class="lp-trust-item"><span>✓</span> Guaranteed payment for sellers</div>
+        <div class="lp-trust-item"><span>✓</span> Dispute resolution included</div>
+      </div>
+    </div>
+    <div class="lp-hero-visual">
+      <div class="lp-float-badge top">🔒 Funds Secured</div>
+      <div class="lp-mock-card">
+        <div class="lp-mock-card-accent">
+          <div class="lp-mock-label">In Escrow</div>
+          <div class="lp-mock-amount">₵ 12,750.00</div>
+          <div style="font-size:0.75rem;opacity:0.7;margin-top:0.25rem;">iPhone 15 Pro — Private Sale</div>
+        </div>
+        <div class="lp-mock-row"><span>Status</span><span class="lp-mock-badge">Funded ✓</span></div>
+        <div class="lp-mock-row"><span>Buyer</span><span style="font-weight:600;">Kwame A.</span></div>
+        <div class="lp-mock-row"><span>Seller</span><span style="font-weight:600;">Ama D.</span></div>
+        <div class="lp-mock-row"><span>Inspection</span><span>3 days</span></div>
+        <div class="lp-mock-row"><span>Betweena Fee</span><span style="color:var(--t);font-weight:700;">₵ 446.25</span></div>
+      </div>
+      <div class="lp-float-badge bot">✅ Payment Released</div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div id="how" class="lp-section-full">
+    <div class="lp-section-full-inner">
+      <div class="lp-section-label">Simple Process</div>
+      <div class="lp-section-title">How Betweena Works</div>
+      <div class="lp-section-sub">Four steps to a safe, stress-free transaction — for both buyers and sellers.</div>
+      <div class="how-grid">
+        <div class="how-step">
+          <div class="how-num">1</div>
+          <div class="how-title">Create Escrow</div>
+          <div class="how-desc">The buyer creates a transaction, sets the terms, inspection period, and amount.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">2</div>
+          <div class="how-title">Funds Deposited</div>
+          <div class="how-desc">Buyer deposits funds into the secure Betweena escrow wallet — safe from everyone.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">3</div>
+          <div class="how-title">Goods Delivered</div>
+          <div class="how-desc">Seller ships or delivers the item. Buyer has an inspection window to verify.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">4</div>
+          <div class="how-title">Payment Released</div>
+          <div class="how-desc">Buyer approves and funds are instantly released to the seller. Done!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div style="padding:2rem 5%;max-width:1200px;margin:0 auto;width:100%;">
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-val">₵2.4B+</div><div class="stat-lbl">Secured in Escrow</div></div>
+      <div class="stat-item"><div class="stat-val">48K+</div><div class="stat-lbl">Transactions Completed</div></div>
+      <div class="stat-item"><div class="stat-val">99.2%</div><div class="stat-lbl">Successful Releases</div></div>
+      <div class="stat-item"><div class="stat-val">6</div><div class="stat-lbl">African Currencies</div></div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div id="features" class="lp-section">
+    <div class="lp-section-label">Why Choose Betweena</div>
+    <div class="lp-section-title">Built for African Commerce</div>
+    <div class="lp-section-sub">Every feature designed around the realities of buying and selling in Ghana and across Africa.</div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <div class="feature-title">Secure Escrow Vault</div>
+        <div class="feature-desc">Funds are held in a neutral escrow account until both parties fulfil their obligations. Neither buyer nor seller can touch the money mid-transaction.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚖️</div>
+        <div class="feature-title">Built-in Dispute Resolution</div>
+        <div class="feature-desc">If something goes wrong, raise a dispute and our team steps in. Fair, fast, and impartial mediation for every case.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title">In-Transaction Chat</div>
+        <div class="feature-desc">Every transaction has a built-in private chat so buyer and seller can communicate directly — all messages are on record.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <div class="feature-title">Multi-Currency Support</div>
+        <div class="feature-desc">Trade in GHS, USD, EUR, GBP, NGN, or KES. Betweena converts automatically so both parties always see amounts in their preferred currency.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <div class="feature-title">Shipment Tracking</div>
+        <div class="feature-desc">Sellers can attach tracking info. Buyers can verify delivery status before releasing funds. Every step is logged on the transaction timeline.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">❤️</div>
+        <div class="feature-title">NGO Fundraising</div>
+        <div class="feature-desc">Support verified NGOs and community causes directly from your wallet. Transparent fundraiser tracking shows exactly where your money goes.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CURRENCIES -->
+  <div id="currencies" class="lp-section-full">
+    <div class="lp-section-full-inner" style="text-align:center;">
+      <div class="lp-section-label">Multi-Currency</div>
+      <div class="lp-section-title">Trade Across Africa & Beyond</div>
+      <div class="lp-section-sub" style="margin:0 auto;">Betweena supports 6 currencies. Store value in GHS and view in any currency you prefer — all in real-time.</div>
+      <div class="currency-chips">
+        <div class="currency-chip"><span class="chip-flag">🇬🇭</span> GHS — Ghana Cedi <span style="color:var(--t);font-weight:700;font-size:0.72rem;margin-left:0.25rem;">DEFAULT</span></div>
+        <div class="currency-chip"><span class="chip-flag">🇺🇸</span> USD — US Dollar</div>
+        <div class="currency-chip"><span class="chip-flag">🇪🇺</span> EUR — Euro</div>
+        <div class="currency-chip"><span class="chip-flag">🇬🇧</span> GBP — British Pound</div>
+        <div class="currency-chip"><span class="chip-flag">🇳🇬</span> NGN — Nigerian Naira</div>
+        <div class="currency-chip"><span class="chip-flag">🇰🇪</span> KES — Kenyan Shilling</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NGO STRIP -->
+  <div id="ngo" style="padding:4rem 5%;background:linear-gradient(135deg,#0F1C19,#1D3A33);">
+    <div class="ngo-strip-inner">
+      <div>
+        <div class="ngo-tag">❤️ Give Back</div>
+        <div class="ngo-title">Support Causes That<br>Matter to Africa</div>
+        <div class="ngo-desc">Every Betweena account comes with the ability to donate directly to verified NGOs from your wallet. From school feeding programmes to flood relief — your spare change builds communities.</div>
+        <button class="btn-lp-primary" onclick="showAuth('register')" style="padding:0.6rem 1.5rem;font-size:0.9rem;">Open Account &amp; Donate →</button>
+      </div>
+      <div class="ngo-cards">
+        <div class="ngo-mini-card">
+          <div class="ngo-mini-icon">📚</div>
+          <div style="flex:1;">
+            <div class="ngo-mini-title">School Feeding Programme</div>
+            <div class="ngo-mini-meta">Nkosuo Education Foundation</div>
+            <div class="ngo-mini-prog"><div class="ngo-mini-fill" style="width:51%"></div></div>
+            <div class="ngo-mini-meta">₵38,250 raised of ₵75,000</div>
+          </div>
+        </div>
+        <div class="ngo-mini-card">
+          <div class="ngo-mini-icon">💧</div>
+          <div style="flex:1;">
+            <div class="ngo-mini-title">Clean Water Boreholes</div>
+            <div class="ngo-mini-meta">WaterLife Ghana NGO</div>
+            <div class="ngo-mini-prog"><div class="ngo-mini-fill" style="width:52%"></div></div>
+            <div class="ngo-mini-meta">₵62,400 raised of ₵120,000</div>
+          </div>
+        </div>
+        <div class="ngo-mini-card">
+          <div class="ngo-mini-icon">🆘</div>
+          <div style="flex:1;">
+            <div class="ngo-mini-title">Flood Relief — Accra</div>
+            <div class="ngo-mini-meta">Ghana Red Crescent Aid</div>
+            <div class="ngo-mini-prog"><div class="ngo-mini-fill" style="width:92%"></div></div>
+            <div class="ngo-mini-meta">₵184,500 raised of ₵200,000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="lp-cta">
+    <h2>Ready to Trade Without Risk?</h2>
+    <p>Join thousands of Ghanaians and Africans who trust Betweena to protect every deal.</p>
+    <button class="btn-lp-xl" onclick="showAuth('register')">Create Free Account →</button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="lp-footer">
+    <div class="lp-footer-inner">
+      <div>
+        <div class="lp-footer-logo">Between<span>a</span></div>
+        <div class="lp-footer-tagline">Secure escrow for the digital economy. Built for Ghana and Africa.</div>
+      </div>
+      <div class="lp-footer-col">
+        <h4>Product</h4>
+        <a onclick="showAuth('register')">Escrow Transactions</a>
+        <a onclick="showAuth('register')">NGO Fundraising</a>
+        <a onclick="showAuth('register')">Multi-Currency Wallet</a>
+        <a onclick="showAuth('register')">Dispute Resolution</a>
+      </div>
+      <div class="lp-footer-col">
+        <h4>Company</h4>
+        <a>About Us</a>
+        <a>How It Works</a>
+        <a>Pricing</a>
+        <a>Blog</a>
+      </div>
+      <div class="lp-footer-col">
+        <h4>Support</h4>
+        <a>Help Centre</a>
+        <a>Contact Us</a>
+        <a>Privacy Policy</a>
+        <a>Terms of Service</a>
+      </div>
+    </div>
+    <div class="lp-footer-bottom">
+      <div>© 2024 Betweena. All rights reserved.</div>
+      <div>Made with ❤️ in Ghana 🇬🇭</div>
+    </div>
+  </footer>
 </div>
 
 <!-- AUTH PAGE -->
@@ -418,7 +781,7 @@ async function api(method, path, body) {
     // Stale or invalid token — clear session and force re-login
     token = null; user = null;
     localStorage.removeItem('bt_token'); localStorage.removeItem('bt_user');
-    showAuth();
+    showAuth('login');
     showToast('Session expired. Please log in again.', 'warning');
     throw new Error(data.error || 'Session expired');
   }
@@ -493,17 +856,29 @@ function setSession(data) {
 function logout() {
   token = null; user = null;
   localStorage.removeItem('bt_token'); localStorage.removeItem('bt_user');
-  showAuth();
+  showLanding();
 }
 
-function showAuth() {
+function showLanding() {
   document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-page').style.display = 'none';
+  const lp = document.getElementById('landing-page');
+  lp.style.display = 'flex';
+}
+
+function showAuth(tab) {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('landing-page').style.display = 'none';
   const ap = document.getElementById('auth-page'); ap.style.display = 'flex';
-  renderAuthForm('login');
+  renderAuthForm(tab || 'login');
+  if (tab === 'register') {
+    document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', i===1));
+  }
 }
 
 function showApp() {
   document.getElementById('auth-page').style.display = 'none';
+  document.getElementById('landing-page').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   updateSidebarUser();
   navigate('dashboard');
@@ -1444,7 +1819,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     document.getElementById('loading-screen').style.display = 'none';
     if (token && user) { showApp(); }
-    else { showAuth(); }
+    else { showLanding(); }
   }, 600);
 });
 </script>
