@@ -739,7 +739,10 @@ a{color:inherit;text-decoration:none;}
 
 <script>
 // ============= STATE =============
-const API = '';
+// In production the frontend (Vercel) calls the backend (Railway) cross-origin.
+// After Railway deploys, replace the placeholder with your actual Railway URL.
+const RAILWAY_URL = 'https://RAILWAY-URL-HERE.up.railway.app';
+const API = window.location.hostname === 'localhost' ? '' : RAILWAY_URL;
 let token = localStorage.getItem('bt_token');
 let user = JSON.parse(localStorage.getItem('bt_user') || 'null');
 let currentPage = 'dashboard';

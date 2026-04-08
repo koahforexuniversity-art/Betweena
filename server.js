@@ -11,13 +11,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Init database
-initDb();
-
 // Security headers
 app.use(helmet({ contentSecurityPolicy: false }));
 
-// CORS — lock down in production via ALLOWED_ORIGIN env var
+// CORS — in production set ALLOWED_ORIGIN to your Vercel URL
 const allowedOrigin = process.env.ALLOWED_ORIGIN || (NODE_ENV === 'development' ? '*' : process.env.APP_URL);
 app.use(cors({
   origin: allowedOrigin,
@@ -27,7 +24,7 @@ app.use(cors({
 
 // Rate limiters
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 20,
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true,
@@ -50,7 +47,7 @@ if (NODE_ENV === 'development') {
   });
 }
 
-// Static frontend
+// Static frontend (Railway serves this; Vercel is the fast CDN path)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
@@ -69,7 +66,7 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: `Route ${req.path} not found` });
 });
 
-// SPA fallback — all other routes serve the frontend
+// SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -80,13 +77,24 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log('\n\x1b[32m✓\x1b[0m \x1b[1mBetweena\x1b[0m is running');
-  console.log(`  \x1b[2mLocal:\x1b[0m   \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
-  console.log(`  \x1b[2mEnv:\x1b[0m     ${NODE_ENV}`);
-  console.log(`  \x1b[2mDemo:\x1b[0m    demo@betweena.com / demo1234\x1b[0m`);
-  console.log(`  \x1b[2mAPI:\x1b[0m     http://localhost:${PORT}/api\x1b[0m`);
-  console.log('');
-});
+// Wait for DB tables before accepting traffic
+async function start() {
+  try {
+    await initDb();
+    app.listen(PORT, () => {
+      console.log('\n\x1b[32m✓\x1b[0m \x1b[1mBetweena\x1b[0m is running');
+      console.log(`  \x1b[2mLocal:\x1b[0m   \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
+      console.log(`  \x1b[2mEnv:\x1b[0m     ${NODE_ENV}`);
+      console.log(`  \x1b[2mDemo:\x1b[0m    demo@betweena.com / demo1234`);
+      console.log(`  \x1b[2mAPI:\x1b[0m     http://localhost:${PORT}/api`);
+      console.log('');
+    });
+  } catch (err) {
+    console.error('\x1b[31m✗ Failed to start:\x1b[0m', err.message);
+    process.exit(1);
+  }
+}
+
+start();
 
 module.exports = app;

@@ -7,8 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "dev:debug": "nodemon --inspect server.js",
-    "reset-db": "node -e \"const fs=require('fs');if(fs.existsSync('betweena.db.json'))fs.unlinkSync('betweena.db.json');console.log('Database reset.');\"",
-    "seed": "node -e \"require('./database').initDb();console.log('Seeded.');\""
+    "seed": "node -e \"require('./database').initDb().then(()=>console.log('Done.')).catch(console.error)\""
   },
   "keywords": [
     "escrow",
@@ -26,6 +25,7 @@
     "express-rate-limit": "^8.3.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.20.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
