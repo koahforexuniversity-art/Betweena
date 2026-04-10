@@ -291,8 +291,17 @@ a{color:inherit;text-decoration:none;}
 .goal-label{font-size:0.78rem;color:var(--m);margin-top:0.25rem;}
 
 /* CURRENCY SELECT */
-.currency-select{padding:0.35rem 0.65rem;border-radius:8px;border:1.5px solid var(--bd);font-size:0.8rem;font-weight:600;color:var(--ink2);background:var(--w);cursor:pointer;outline:none;}
-.currency-select:focus{border-color:var(--t);}
+.currency-select{display:none;}
+.curr-picker{position:relative;display:inline-block;}
+.curr-btn{display:flex;align-items:center;gap:0.4rem;padding:0.35rem 0.75rem;border-radius:8px;border:1.5px solid var(--bd);font-size:0.82rem;font-weight:600;color:var(--ink2);background:var(--w);cursor:pointer;white-space:nowrap;transition:border-color var(--tr);}
+.curr-btn:hover,.curr-btn.open{border-color:var(--t);}
+.curr-flag{font-size:1.1rem;line-height:1;}
+.curr-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--w);border:1.5px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:200;min-width:170px;overflow:hidden;display:none;}
+.curr-dropdown.open{display:block;}
+.curr-opt{display:flex;align-items:center;gap:0.6rem;padding:0.6rem 1rem;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--ink2);transition:background var(--tr);}
+.curr-opt:hover{background:var(--tl);color:var(--t);}
+.curr-opt.active{background:var(--tl);color:var(--t);}
+.curr-opt-flag{font-size:1.2rem;}
 
 /* JOIN CODE display */
 .join-code-display{
@@ -680,13 +689,28 @@ a{color:inherit;text-decoration:none;}
       </div>
       <div class="tb-right">
         <select class="currency-select" id="currency-select" onchange="changeCurrency(this.value)">
-          <option value="GHS">₵ GHS</option>
-          <option value="USD">$ USD</option>
-          <option value="EUR">€ EUR</option>
-          <option value="GBP">£ GBP</option>
-          <option value="NGN">₦ NGN</option>
-          <option value="KES">KSh KES</option>
+          <option value="GHS">GHS</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="NGN">NGN</option>
+          <option value="KES">KES</option>
         </select>
+        <div class="curr-picker" id="curr-picker">
+          <button class="curr-btn" id="curr-btn" onclick="toggleCurrPicker(event)">
+            <span class="curr-flag" id="curr-flag">🇬🇭</span>
+            <span id="curr-label">GHS</span>
+            <span style="font-size:0.65rem;opacity:0.5;">▼</span>
+          </button>
+          <div class="curr-dropdown" id="curr-dropdown">
+            <div class="curr-opt" onclick="selectCurr('GHS')"><span class="curr-opt-flag">🇬🇭</span> GHS — Cedi</div>
+            <div class="curr-opt" onclick="selectCurr('USD')"><span class="curr-opt-flag">🇺🇸</span> USD — Dollar</div>
+            <div class="curr-opt" onclick="selectCurr('EUR')"><span class="curr-opt-flag">🇪🇺</span> EUR — Euro</div>
+            <div class="curr-opt" onclick="selectCurr('GBP')"><span class="curr-opt-flag">🇬🇧</span> GBP — Pound</div>
+            <div class="curr-opt" onclick="selectCurr('NGN')"><span class="curr-opt-flag">🇳🇬</span> NGN — Naira</div>
+            <div class="curr-opt" onclick="selectCurr('KES')"><span class="curr-opt-flag">🇰🇪</span> KES — Shilling</div>
+          </div>
+        </div>
         <div class="tb-balance">Balance: <strong id="tb-balance">₵0.00</strong></div>
         <button class="btn-topbar" onclick="navigate('new-transaction')">+ New Escrow</button>
         <div class="tb-notif" onclick="navigate('notifications')">
@@ -745,12 +769,47 @@ function fmt(amount) {
   return c.symbol + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+const CURR_FLAGS = { GHS:'🇬🇭', USD:'🇺🇸', EUR:'🇪🇺', GBP:'🇬🇧', NGN:'🇳🇬', KES:'🇰🇪' };
+
 function changeCurrency(code) {
   selectedCurrency = code;
   localStorage.setItem('bt_currency', code);
+  // sync hidden select
+  const sel = document.getElementById('currency-select');
+  if (sel) sel.value = code;
+  // update custom picker button
+  const flag = document.getElementById('curr-flag');
+  const label = document.getElementById('curr-label');
+  if (flag) flag.textContent = CURR_FLAGS[code] || '';
+  if (label) label.textContent = code;
+  // mark active option
+  document.querySelectorAll('.curr-opt').forEach(o => o.classList.toggle('active', o.textContent.trim().startsWith(code)));
   updateSidebarUser();
   navigate(currentPage);
 }
+
+function selectCurr(code) {
+  closeCurrPicker();
+  changeCurrency(code);
+}
+
+function toggleCurrPicker(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('curr-dropdown');
+  const btn = document.getElementById('curr-btn');
+  const open = dd.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+function closeCurrPicker() {
+  document.getElementById('curr-dropdown')?.classList.remove('open');
+  document.getElementById('curr-btn')?.classList.remove('open');
+}
+
+// Close picker when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#curr-picker')) closeCurrPicker();
+});
 
 // ============= API =============
 async function api(method, path, body) {
@@ -1977,6 +2036,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restore saved currency on load
   const sel = document.getElementById('currency-select');
   if (sel) sel.value = selectedCurrency;
+  const flag = document.getElementById('curr-flag');
+  const label = document.getElementById('curr-label');
+  if (flag) flag.textContent = CURR_FLAGS[selectedCurrency] || '🇬🇭';
+  if (label) label.textContent = selectedCurrency;
+  document.querySelectorAll('.curr-opt').forEach(o => o.classList.toggle('active', o.textContent.trim().startsWith(selectedCurrency)));
 
   setTimeout(() => {
     document.getElementById('loading-screen').style.display = 'none';
