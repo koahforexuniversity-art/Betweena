@@ -4,7 +4,7 @@
   "description": "Betweena — Secure Escrow Platform for the Digital Economy",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node --dns-result-order=ipv4first server.js",
     "dev": "nodemon server.js",
     "dev:debug": "nodemon --inspect server.js",
     "seed": "node -e \"require('./database').initDb().then(()=>console.log('Done.')).catch(console.error)\""
