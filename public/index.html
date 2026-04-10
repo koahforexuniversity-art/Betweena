@@ -147,6 +147,29 @@ a{color:inherit;text-decoration:none;}
 .auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:35%;height:1px;background:var(--bd);}
 .auth-divider::before{left:0;}.auth-divider::after{right:0;}
 
+/* PASSWORD EYE TOGGLE */
+.pw-wrap{position:relative;display:flex;align-items:center;}
+.pw-wrap .form-input{padding-right:2.75rem;width:100%;}
+.pw-eye{position:absolute;right:0.75rem;background:none;border:none;cursor:pointer;color:var(--ml);font-size:1rem;padding:0;line-height:1;display:flex;align-items:center;}
+.pw-eye:hover{color:var(--t);}
+
+/* VERIFICATION SCREEN */
+.verify-icon{font-size:2.5rem;text-align:center;margin-bottom:0.5rem;}
+.verify-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;text-align:center;margin-bottom:0.4rem;}
+.verify-sub{font-size:0.83rem;color:var(--m);text-align:center;margin-bottom:1.5rem;line-height:1.6;}
+.verify-methods{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.25rem;}
+.verify-method-btn{padding:0.85rem;border-radius:12px;border:1.5px solid var(--bd);background:var(--s);font-size:0.85rem;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:0.3rem;transition:all var(--tr);}
+.verify-method-btn:hover{border-color:var(--t);background:var(--tl);color:var(--t);}
+.verify-method-btn .vm-icon{font-size:1.5rem;}
+.otp-input{text-align:center;font-size:1.6rem;letter-spacing:0.4em;font-weight:700;padding:0.75rem;border-radius:10px;}
+.dev-otp-hint{background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:0.6rem 0.85rem;font-size:0.78rem;color:#5D4037;margin-bottom:0.75rem;text-align:center;}
+
+/* KYC CARD */
+.kyc-badge{display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.85rem;border-radius:100px;font-size:0.75rem;font-weight:700;}
+.kyc-badge.verified{background:#E8F5E9;color:#2E7D32;}
+.kyc-badge.pending{background:#FFF8E1;color:#E65100;}
+.kyc-badge.unverified{background:#FFEBEE;color:#C62828;}
+
 /* TOAST */
 .toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;}
 .toast{background:var(--ink);color:#fff;padding:0.75rem 1.25rem;border-radius:10px;font-size:0.85rem;font-weight:500;display:flex;align-items:center;gap:0.6rem;animation:slideInRight .3s ease;max-width:340px;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
@@ -613,7 +636,7 @@ a{color:inherit;text-decoration:none;}
 <!-- AUTH PAGE -->
 <div id="auth-page">
   <div class="auth-box">
-    <div class="auth-logo">Between<span>a</span></div>
+    <div class="auth-logo" onclick="showLanding()" style="cursor:pointer;" title="Back to home">Between<span>a</span></div>
     <div class="auth-sub">Secure escrow for the digital economy</div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
@@ -629,7 +652,7 @@ a{color:inherit;text-decoration:none;}
 <div id="app" style="display:none;">
   <!-- SIDEBAR -->
   <nav id="sidebar">
-    <div class="sb-logo">Between<span>a</span></div>
+    <div class="sb-logo" onclick="logout()" style="cursor:pointer;" title="Home">Between<span>a</span></div>
     <div class="sb-section">Menu</div>
     <div class="sb-item active" data-page="dashboard"><span class="icon">⊞</span>Dashboard</div>
     <div class="sb-item" data-page="transactions"><span class="icon">↔</span>Transactions<span class="sb-badge" id="active-badge" style="display:none">0</span></div>
@@ -751,30 +774,51 @@ async function api(method, path, body) {
 }
 
 // ============= AUTH =============
+let _pendingEmail = null;
+let _pendingOtpType = null;
+
 function switchAuthTab(tab) {
   document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login')||(i===1 && tab==='register')));
   renderAuthForm(tab);
+}
+
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+function pwField(id, placeholder, onEnter) {
+  return `<div class="pw-wrap">
+    <input class="form-input" id="${id}" type="password" placeholder="${placeholder}" ${onEnter ? `onkeydown="if(event.key==='Enter')${onEnter}"` : ''}>
+    <button type="button" class="pw-eye" onclick="togglePw('${id}',this)">👁</button>
+  </div>`;
 }
 
 function renderAuthForm(tab) {
   const el = document.getElementById('auth-form');
   if (tab === 'login') {
     el.innerHTML = `
-      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="a-email" type="email" placeholder="you@example.com"></div>
-      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="a-pass" type="password" placeholder="••••••••"></div>
+      <div class="form-group"><label class="form-label">Email</label>
+        <input class="form-input" id="a-email" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="form-group"><label class="form-label">Password</label>${pwField('a-pass','••••••••','doLogin()')}</div>
       <div id="a-err" class="form-error" style="margin-bottom:0.75rem;display:none;"></div>
       <button class="btn btn-primary btn-full btn-lg" id="a-btn" onclick="doLogin()">Log In →</button>`;
-    document.getElementById('a-email').addEventListener('keydown', e => e.key==='Enter' && doLogin());
-    document.getElementById('a-pass').addEventListener('keydown', e => e.key==='Enter' && doLogin());
   } else {
     el.innerHTML = `
       <div class="form-row">
         <div class="form-group"><label class="form-label">First name</label><input class="form-input" id="a-fn" type="text" placeholder="Kwame"></div>
         <div class="form-group"><label class="form-label">Last name</label><input class="form-input" id="a-ln" type="text" placeholder="Asante"></div>
       </div>
-      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="a-email" type="email" placeholder="you@example.com"></div>
-      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="a-phone" type="tel" placeholder="+233 XX XXX XXXX"></div>
-      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="a-pass" type="password" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label class="form-label">Email</label>
+        <input class="form-input" id="a-email" type="email" placeholder="you@example.com">
+      </div>
+      <div class="form-group"><label class="form-label">Phone</label>
+        <input class="form-input" id="a-phone" type="tel" placeholder="+233 XX XXX XXXX">
+      </div>
+      <div class="form-group"><label class="form-label">Password</label>${pwField('a-pass','Min 8 characters')}</div>
+      <div class="form-group"><label class="form-label">Confirm Password</label>${pwField('a-pass2','Re-enter password','doRegister()')}</div>
       <div id="a-err" class="form-error" style="margin-bottom:0.75rem;display:none;"></div>
       <button class="btn btn-primary btn-full btn-lg" id="a-btn" onclick="doRegister()">Create Account →</button>`;
   }
@@ -783,7 +827,6 @@ function renderAuthForm(tab) {
 async function doLogin() {
   const email = document.getElementById('a-email').value.trim();
   const password = document.getElementById('a-pass').value;
-  const errEl = document.getElementById('a-err');
   const btn = document.getElementById('a-btn');
   if (!email || !password) { showError('a-err', 'All fields required'); return; }
   btn.innerHTML = '<span class="spinner"></span> Logging in...'; btn.disabled = true;
@@ -795,17 +838,91 @@ async function doLogin() {
 
 async function doRegister() {
   const first_name = document.getElementById('a-fn').value.trim();
-  const last_name = document.getElementById('a-ln').value.trim();
-  const email = document.getElementById('a-email').value.trim();
-  const phone = document.getElementById('a-phone')?.value.trim();
-  const password = document.getElementById('a-pass').value;
+  const last_name  = document.getElementById('a-ln').value.trim();
+  const email      = document.getElementById('a-email').value.trim();
+  const phone      = document.getElementById('a-phone')?.value.trim();
+  const password   = document.getElementById('a-pass').value;
+  const password2  = document.getElementById('a-pass2').value;
   const btn = document.getElementById('a-btn');
   if (!first_name || !last_name || !email || !password) { showError('a-err', 'All fields required'); return; }
+  if (password.length < 8) { showError('a-err', 'Password must be at least 8 characters'); return; }
+  if (password !== password2) { showError('a-err', 'Passwords do not match'); return; }
   btn.innerHTML = '<span class="spinner"></span> Creating...'; btn.disabled = true;
   try {
     const data = await api('POST', '/auth/register', { first_name, last_name, email, phone, password });
-    setSession(data); showApp();
+    _pendingEmail = data.email;
+    renderVerifyScreen();
   } catch(e) { showError('a-err', e.message); btn.innerHTML = 'Create Account →'; btn.disabled = false; }
+}
+
+// ─── OTP Verification screen ───
+function renderVerifyScreen() {
+  const el = document.getElementById('auth-form');
+  // Hide demo hint and tabs during verification
+  document.querySelector('.auth-divider')?.style && (document.querySelector('.auth-divider').style.display = 'none');
+  document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
+  el.innerHTML = `
+    <div class="verify-icon">📬</div>
+    <div class="verify-title">Verify your account</div>
+    <div class="verify-sub">Choose how you'd like to receive your 6-digit verification code.</div>
+    <div class="verify-methods">
+      <button class="verify-method-btn" onclick="sendOtp('email')">
+        <span class="vm-icon">📧</span>Email
+      </button>
+      <button class="verify-method-btn" onclick="sendOtp('phone')">
+        <span class="vm-icon">📱</span>SMS
+      </button>
+    </div>
+    <div id="otp-area" style="display:none;">
+      <div id="dev-otp" class="dev-otp-hint" style="display:none;"></div>
+      <div class="form-group">
+        <label class="form-label">Enter 6-digit code</label>
+        <input class="form-input otp-input" id="a-otp" type="text" inputmode="numeric" maxlength="6" placeholder="000000"
+               onkeydown="if(event.key==='Enter')verifyOtp()">
+      </div>
+      <div id="v-err" class="form-error" style="margin-bottom:0.75rem;display:none;"></div>
+      <button class="btn btn-primary btn-full btn-lg" id="v-btn" onclick="verifyOtp()">Verify →</button>
+      <div style="text-align:center;margin-top:0.75rem;">
+        <button onclick="sendOtp(_pendingOtpType)" style="background:none;border:none;color:var(--t);font-size:0.82rem;cursor:pointer;font-weight:600;">Resend code</button>
+      </div>
+    </div>`;
+}
+
+async function sendOtp(type) {
+  if (!_pendingEmail) return;
+  _pendingOtpType = type;
+  // Show spinner on clicked button
+  const btns = document.querySelectorAll('.verify-method-btn');
+  btns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+  try {
+    const res = await api('POST', '/auth/send-otp', { email: _pendingEmail, type });
+    document.getElementById('otp-area').style.display = 'block';
+    if (res.dev_otp) {
+      const hint = document.getElementById('dev-otp');
+      hint.style.display = 'block';
+      hint.textContent = `Dev mode — code: ${res.dev_otp}`;
+    }
+    showToast(`Code sent via ${type === 'email' ? 'email' : 'SMS'}`, 'success');
+  } catch(e) {
+    showToast(e.message, 'error');
+    btns.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+  }
+}
+
+async function verifyOtp() {
+  const otp = document.getElementById('a-otp')?.value.trim();
+  const btn = document.getElementById('v-btn');
+  if (!otp || otp.length < 6) { showError('v-err', 'Enter the 6-digit code'); return; }
+  btn.innerHTML = '<span class="spinner"></span> Verifying...'; btn.disabled = true;
+  try {
+    const data = await api('POST', '/auth/verify-otp', { email: _pendingEmail, otp, type: _pendingOtpType });
+    _pendingEmail = null; _pendingOtpType = null;
+    // Restore auth UI
+    document.querySelectorAll('.auth-tab').forEach(t => t.style.display = '');
+    const div = document.querySelector('.auth-divider');
+    if (div) div.style.display = '';
+    setSession(data); showApp();
+  } catch(e) { showError('v-err', e.message); btn.innerHTML = 'Verify →'; btn.disabled = false; }
 }
 
 function setSession(data) {
@@ -1531,15 +1648,101 @@ function renderProfile() {
         <div class="card" style="margin-bottom:1rem;">
           <div class="section-title-sm" style="margin-bottom:1rem;">Account Stats</div>
           ${row('Member Since', new Date(user?.created_at||Date.now()).toLocaleDateString())}
-          ${row('KYC Status', user?.kyc_status || 'pending')}
           ${row('Wallet Balance', fmt(user?.wallet_balance||0))}
         </div>
-        <div class="card" style="background:#FFEBEE;border-color:rgba(211,47,47,0.15);">
+        ${renderKycCard()}
+        <div class="card" style="background:#FFEBEE;border-color:rgba(211,47,47,0.15);margin-top:1rem;">
           <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.75rem;color:#C62828;">Danger Zone</div>
           <button class="btn btn-danger btn-full" onclick="logout()">Sign Out of All Devices</button>
         </div>
       </div>
     </div>`;
+}
+
+function renderKycCard() {
+  const st = user?.kyc_status || 'unverified';
+  if (st === 'verified') {
+    return `<div class="card" style="border-color:rgba(46,125,50,0.25);background:#F1F8E9;">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+        <span style="font-size:1.5rem;">✅</span>
+        <div>
+          <div style="font-weight:700;font-size:0.92rem;">KYC Verified</div>
+          <div style="font-size:0.78rem;color:var(--m);">Your identity has been verified.</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  if (st === 'pending') {
+    return `<div class="card" style="border-color:rgba(230,81,0,0.25);background:#FFF8F0;">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span style="font-size:1.5rem;">⏳</span>
+        <div>
+          <div style="font-weight:700;font-size:0.92rem;">KYC Under Review</div>
+          <div style="font-size:0.78rem;color:var(--m);">Usually takes a few seconds in demo mode.</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:1rem;width:100%;" onclick="refreshKycStatus()">Check Status</button>
+    </div>`;
+  }
+  // unverified — show form
+  return `<div class="card">
+    <div class="section-title-sm" style="margin-bottom:1rem;">🪪 KYC Verification</div>
+    <p style="font-size:0.82rem;color:var(--m);margin-bottom:1.25rem;line-height:1.6;">
+      Verify your identity to unlock escrow transactions and higher wallet limits.
+    </p>
+    <div class="form-group">
+      <label class="form-label">ID Type</label>
+      <select class="form-input" id="kyc-type">
+        <option value="">Select ID type</option>
+        <option value="ghana_card">Ghana Card</option>
+        <option value="passport">Passport</option>
+        <option value="voter_id">Voter's ID</option>
+        <option value="driver_license">Driver's License</option>
+        <option value="nin">NIN (Nigeria)</option>
+        <option value="national_id">National ID</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ID Number</label>
+      <input class="form-input" id="kyc-number" placeholder="e.g. GHA-XXXXXXXXX-X">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date of Birth</label>
+      <input class="form-input" id="kyc-dob" type="date" max="${new Date(Date.now()-18*365*864e5).toISOString().split('T')[0]}">
+    </div>
+    <div id="kyc-err" class="form-error" style="margin-bottom:0.75rem;display:none;"></div>
+    <button class="btn btn-primary btn-full" id="kyc-btn" onclick="submitKyc()">Submit KYC →</button>
+  </div>`;
+}
+
+async function submitKyc() {
+  const id_type  = document.getElementById('kyc-type')?.value;
+  const id_number = document.getElementById('kyc-number')?.value.trim();
+  const dob      = document.getElementById('kyc-dob')?.value;
+  const btn      = document.getElementById('kyc-btn');
+  if (!id_type || !id_number || !dob) { showError('kyc-err', 'All KYC fields are required'); return; }
+  btn.innerHTML = '<span class="spinner"></span> Submitting...'; btn.disabled = true;
+  try {
+    const res = await api('POST', '/auth/kyc', { id_type, id_number, dob });
+    user = { ...user, kyc_status: res.kyc_status };
+    localStorage.setItem('bt_user', JSON.stringify(user));
+    showToast('KYC submitted! Verification in progress…', 'success');
+    renderProfile();
+    // Poll once after 5s for the auto-approval
+    setTimeout(refreshKycStatus, 5000);
+  } catch(e) { showError('kyc-err', e.message); btn.innerHTML = 'Submit KYC →'; btn.disabled = false; }
+}
+
+async function refreshKycStatus() {
+  try {
+    const profile = await api('GET', '/auth/profile');
+    if (profile.kyc_status !== user.kyc_status) {
+      user = { ...user, kyc_status: profile.kyc_status };
+      localStorage.setItem('bt_user', JSON.stringify(user));
+      if (profile.kyc_status === 'verified') showToast('KYC verified! ✅', 'success');
+      renderProfile();
+    }
+  } catch(e) { /* ignore */ }
 }
 
 async function saveProfile() {

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skills": {
+    "jwt-decode": {
+      "source": "jsonwebtoken/jwt-skills",
+      "sourceType": "github",
+      "computedHash": "0d67e86147b49a5571a25fa6253d55380c0c915bc9c9649aac470eced75e3e54"
+    },
+    "jwt-encode": {
+      "source": "jsonwebtoken/jwt-skills",
+      "sourceType": "github",
+      "computedHash": "e5562b9c6ecf7f59abaca63d337a8b0b8d0ee9a0423e5f4e5cfe7fb5719a2efb"
+    },
+    "jwt-validate": {
+      "source": "jsonwebtoken/jwt-skills",
+      "sourceType": "github",
+      "computedHash": "c8a86f6afb1489576e0f489936ecb6120e84a851719dbc23f1e359c3124f4cec"
+    },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "3bc4f56943a13f4fe355742a4b3b30c56008e6d265ae71f19c592410b5f5a01f"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "abf015aafed757edaf2a329299fc106abebdc53bc7f089e92e1f762ed3d8f117"
+    }
+  }
+}

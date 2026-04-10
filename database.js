@@ -120,6 +120,17 @@ async function createTables() {
       created_at    TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+  // Migrations — safe to run on every startup
+  await db.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_code TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS kyc_id_type TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS kyc_id_number TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS kyc_dob DATE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS kyc_submitted_at TIMESTAMPTZ;
+  `);
 }
 
 function calcSeedFee(amount) {
