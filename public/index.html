@@ -334,9 +334,17 @@ a{color:inherit;text-decoration:none;}
 /* Hero */
 .lp-hero-wrap{position:relative;width:100%;overflow:hidden;line-height:0;}
 .lp-hero-img{width:100%;height:auto;display:block;max-height:660px;object-fit:cover;object-position:center top;}
-.lp-hero-btns{position:absolute;bottom:20%;left:6%;display:flex;gap:0.85rem;flex-wrap:wrap;}
-.lp-hero-btns .btn-ghost{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.5);}
-.lp-hero-btns .btn-ghost:hover{background:rgba(255,255,255,0.25);border-color:#fff;color:#fff;}
+/* Buttons overlaid on desktop, shown below image on mobile */
+.lp-hero-btns{
+  position:absolute;
+  bottom:18%;left:6%;
+  display:flex;gap:0.85rem;flex-wrap:wrap;
+  z-index:10;
+}
+.lp-hero-btns .btn-ghost{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.6);backdrop-filter:blur(4px);}
+.lp-hero-btns .btn-ghost:hover{background:rgba(255,255,255,0.28);border-color:#fff;color:#fff;}
+/* Mobile hero CTA — shown below image */
+.lp-hero-cta-mobile{display:none;justify-content:center;gap:0.85rem;flex-wrap:wrap;padding:1.25rem 5%;background:var(--w);}
 
 /* Sections */
 .lp-section{padding:4.5rem 5%;max-width:1200px;margin:0 auto;width:100%;}
@@ -410,7 +418,7 @@ a{color:inherit;text-decoration:none;}
 
 /* Responsive landing */
 @media(max-width:900px){
-  .lp-hero-btns{bottom:10%;left:50%;transform:translateX(-50%);white-space:nowrap;}
+  .lp-hero-btns{bottom:12%;left:50%;transform:translateX(-50%);}
   .how-grid{grid-template-columns:1fr 1fr;}
   .how-step::after{display:none;}
   .feature-grid{grid-template-columns:1fr 1fr;}
@@ -424,6 +432,16 @@ a{color:inherit;text-decoration:none;}
   .feature-grid{grid-template-columns:1fr;}
   .stats-bar{grid-template-columns:1fr 1fr;padding:1.5rem;}
   .stat-val{font-size:1.5rem;}
+  /* On small phones hide overlaid buttons, show dedicated CTA row instead */
+  .lp-hero-btns{display:none;}
+  .lp-hero-cta-mobile{display:flex;}
+  /* Bigger tap targets on mobile */
+  .btn-lg{padding:0.9rem 1.75rem;font-size:1rem;width:100%;justify-content:center;}
+  .lp-hero-cta-mobile .btn-lg{width:auto;min-width:140px;}
+  /* Navbar logo smaller on phone */
+  .lp-logo img{height:72px;}
+  .lp-nav-btns{gap:0.5rem;}
+  .btn-lp-ghost,.btn-lp-primary{font-size:0.78rem;padding:0.4rem 0.85rem;}
 }
 </style>
 </head>
@@ -459,6 +477,11 @@ a{color:inherit;text-decoration:none;}
       <button class="btn btn-primary btn-lg" onclick="showAuth('register')">Start for Free →</button>
       <button class="btn btn-ghost btn-lg" onclick="showAuth('login')">Log In</button>
     </div>
+  </div>
+  <!-- Mobile CTA — only visible on small screens (<600px) -->
+  <div class="lp-hero-cta-mobile">
+    <button class="btn btn-primary btn-lg" onclick="showAuth('register')">Start for Free →</button>
+    <button class="btn btn-ghost btn-lg" onclick="showAuth('login')">Log In</button>
   </div>
 
   <!-- HOW IT WORKS -->
