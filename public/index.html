@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Betweena — Secure Escrow</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
 <style>
 :root {
   --t: #006B5C; --td: #004D41; --tl: #E8F5F2; --tm: #1D9E75;
@@ -372,7 +373,8 @@ a{color:inherit;text-decoration:none;}
 .currency-chips{display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:2rem;justify-content:center;}
 .currency-chip{display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1.1rem;background:var(--w);border:1.5px solid var(--bd);border-radius:100px;font-size:0.85rem;font-weight:600;transition:all var(--tr);}
 .currency-chip:hover{border-color:var(--t);background:var(--tl);}
-.chip-flag{font-size:1.5rem;line-height:1;}
+.chip-flag{font-size:1.4rem;line-height:1;display:inline-flex;align-items:center;}
+.chip-flag .fi{font-size:1.4rem;border-radius:3px;}
 
 /* NGO strip */
 .ngo-strip{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;padding:4rem 5%;background:linear-gradient(135deg,#0F1C19,#1D3A33);max-width:100%;}
@@ -546,12 +548,12 @@ a{color:inherit;text-decoration:none;}
       <div class="lp-section-title">Trade Across Africa & Beyond</div>
       <div class="lp-section-sub" style="margin:0 auto;">Betweena supports 6 currencies. Store value in GHS and view in any currency you prefer — all in real-time.</div>
       <div class="currency-chips">
-        <div class="currency-chip"><span class="chip-flag">🇬🇭</span> GHS — Ghana Cedi <span style="color:var(--t);font-weight:700;font-size:0.72rem;margin-left:0.25rem;">DEFAULT</span></div>
-        <div class="currency-chip"><span class="chip-flag">🇺🇸</span> USD — US Dollar</div>
-        <div class="currency-chip"><span class="chip-flag">🇪🇺</span> EUR — Euro</div>
-        <div class="currency-chip"><span class="chip-flag">🇬🇧</span> GBP — British Pound</div>
-        <div class="currency-chip"><span class="chip-flag">🇳🇬</span> NGN — Nigerian Naira</div>
-        <div class="currency-chip"><span class="chip-flag">🇰🇪</span> KES — Kenyan Shilling</div>
+        <div class="currency-chip"><span class="chip-flag"><span class="fi fi-gh fis"></span></span> GHS — Ghana Cedi <span style="color:var(--t);font-weight:700;font-size:0.72rem;margin-left:0.25rem;">DEFAULT</span></div>
+        <div class="currency-chip"><span class="chip-flag"><span class="fi fi-us fis"></span></span> USD — US Dollar</div>
+        <div class="currency-chip"><span class="chip-flag"><span class="fi fi-eu fis"></span></span> EUR — Euro</div>
+        <div class="currency-chip"><span class="chip-flag"><span class="fi fi-gb fis"></span></span> GBP — British Pound</div>
+        <div class="currency-chip"><span class="chip-flag"><span class="fi fi-ng fis"></span></span> NGN — Nigerian Naira</div>
+        <div class="currency-chip"><span class="chip-flag"><span class="fi fi-ke fis"></span></span> KES — Kenyan Shilling</div>
 
       </div>
     </div>
@@ -699,17 +701,17 @@ a{color:inherit;text-decoration:none;}
         </select>
         <div class="curr-picker" id="curr-picker">
           <button class="curr-btn" id="curr-btn" onclick="toggleCurrPicker(event)">
-            <span class="curr-flag" id="curr-flag">🇬🇭</span>
+            <span class="curr-flag" id="curr-flag"><span class="fi fi-gh fis"></span></span>
             <span id="curr-label">GHS</span>
             <span style="font-size:0.65rem;opacity:0.5;">▼</span>
           </button>
           <div class="curr-dropdown" id="curr-dropdown">
-            <div class="curr-opt" onclick="selectCurr('GHS')"><span class="curr-opt-flag">🇬🇭</span> GHS — Cedi</div>
-            <div class="curr-opt" onclick="selectCurr('USD')"><span class="curr-opt-flag">🇺🇸</span> USD — Dollar</div>
-            <div class="curr-opt" onclick="selectCurr('EUR')"><span class="curr-opt-flag">🇪🇺</span> EUR — Euro</div>
-            <div class="curr-opt" onclick="selectCurr('GBP')"><span class="curr-opt-flag">🇬🇧</span> GBP — Pound</div>
-            <div class="curr-opt" onclick="selectCurr('NGN')"><span class="curr-opt-flag">🇳🇬</span> NGN — Naira</div>
-            <div class="curr-opt" onclick="selectCurr('KES')"><span class="curr-opt-flag">🇰🇪</span> KES — Shilling</div>
+            <div class="curr-opt" onclick="selectCurr('GHS')"><span class="curr-opt-flag"><span class="fi fi-gh fis"></span></span> GHS — Cedi</div>
+            <div class="curr-opt" onclick="selectCurr('USD')"><span class="curr-opt-flag"><span class="fi fi-us fis"></span></span> USD — Dollar</div>
+            <div class="curr-opt" onclick="selectCurr('EUR')"><span class="curr-opt-flag"><span class="fi fi-eu fis"></span></span> EUR — Euro</div>
+            <div class="curr-opt" onclick="selectCurr('GBP')"><span class="curr-opt-flag"><span class="fi fi-gb fis"></span></span> GBP — Pound</div>
+            <div class="curr-opt" onclick="selectCurr('NGN')"><span class="curr-opt-flag"><span class="fi fi-ng fis"></span></span> NGN — Naira</div>
+            <div class="curr-opt" onclick="selectCurr('KES')"><span class="curr-opt-flag"><span class="fi fi-ke fis"></span></span> KES — Shilling</div>
           </div>
         </div>
         <div class="tb-balance">Balance: <strong id="tb-balance">₵0.00</strong></div>
@@ -770,7 +772,7 @@ function fmt(amount) {
   return c.symbol + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const CURR_FLAGS = { GHS:'🇬🇭', USD:'🇺🇸', EUR:'🇪🇺', GBP:'🇬🇧', NGN:'🇳🇬', KES:'🇰🇪' };
+const CURR_FLAGS = { GHS:'<span class="fi fi-gh fis"></span>', USD:'<span class="fi fi-us fis"></span>', EUR:'<span class="fi fi-eu fis"></span>', GBP:'<span class="fi fi-gb fis"></span>', NGN:'<span class="fi fi-ng fis"></span>', KES:'<span class="fi fi-ke fis"></span>' };
 
 function changeCurrency(code) {
   selectedCurrency = code;
@@ -781,7 +783,7 @@ function changeCurrency(code) {
   // update custom picker button
   const flag = document.getElementById('curr-flag');
   const label = document.getElementById('curr-label');
-  if (flag) flag.textContent = CURR_FLAGS[code] || '';
+  if (flag) flag.innerHTML = CURR_FLAGS[code] || '';
   if (label) label.textContent = code;
   // mark active option
   document.querySelectorAll('.curr-opt').forEach(o => o.classList.toggle('active', o.textContent.trim().startsWith(code)));
@@ -2039,7 +2041,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sel) sel.value = selectedCurrency;
   const flag = document.getElementById('curr-flag');
   const label = document.getElementById('curr-label');
-  if (flag) flag.textContent = CURR_FLAGS[selectedCurrency] || '🇬🇭';
+  if (flag) flag.innerHTML = CURR_FLAGS[selectedCurrency] || CURR_FLAGS.GHS;
   if (label) label.textContent = selectedCurrency;
   document.querySelectorAll('.curr-opt').forEach(o => o.classList.toggle('active', o.textContent.trim().startsWith(selectedCurrency)));
 
