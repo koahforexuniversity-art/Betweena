@@ -18,10 +18,16 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Security headers
 app.use(helmet({ contentSecurityPolicy: false }));
 
-// CORS — in production set ALLOWED_ORIGIN to your Vercel URL
-const allowedOrigin = process.env.ALLOWED_ORIGIN || (NODE_ENV === 'development' ? '*' : process.env.APP_URL);
+// CORS
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || '*')
+  .split(',').map(o => o.trim()).filter(Boolean);
 app.use(cors({
-  origin: allowedOrigin,
+  origin: (origin, cb) => {
+    // allow non-browser requests (curl, Postman, server-to-server)
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
