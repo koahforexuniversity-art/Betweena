@@ -28,7 +28,9 @@ a{color:inherit;text-decoration:none;}
   display:flex;flex-direction:column;
   position:fixed;top:0;bottom:0;left:0;z-index:100;
   transition:transform var(--tr);
+  overflow:hidden;
 }
+#sidebar .sb-nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;}
 #main-content{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
 #topbar{
   background:var(--w);border-bottom:1px solid var(--bd);
@@ -46,7 +48,7 @@ a{color:inherit;text-decoration:none;}
 .sb-item.active{background:rgba(0,107,92,0.35);color:#fff;}
 .sb-item .icon{font-size:1rem;width:20px;text-align:center;}
 .sb-badge{margin-left:auto;background:var(--g);color:var(--ink);font-size:0.6rem;font-weight:800;padding:0.1rem 0.4rem;border-radius:100px;}
-.sb-bottom{margin-top:auto;padding:1rem;border-top:1px solid rgba(255,255,255,0.07);}
+.sb-bottom{margin-top:auto;padding:1rem;border-top:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
 .sb-user{display:flex;align-items:center;gap:0.75rem;padding:0.5rem;}
 .sb-avatar{width:34px;height:34px;border-radius:50%;background:rgba(0,107,92,0.4);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0;}
 .sb-name{font-size:0.82rem;color:rgba(255,255,255,0.75);font-weight:500;}
@@ -320,8 +322,8 @@ a{color:inherit;text-decoration:none;}
 #landing-page{display:none;flex-direction:column;min-height:100vh;background:var(--w);}
 
 /* Navbar */
-.lp-nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 5%;position:sticky;top:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd);z-index:100;}
-.lp-logo img{height:110px;width:auto;display:block;mix-blend-mode:multiply;}
+.lp-nav{display:flex;align-items:center;justify-content:space-between;padding:0.4rem 5%;position:sticky;top:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd);z-index:100;}
+.lp-logo img{height:64px;width:auto;display:block;mix-blend-mode:multiply;}
 .lp-nav-links{display:flex;gap:2rem;list-style:none;}
 .lp-nav-links a{font-size:0.88rem;font-weight:500;color:var(--ink2);transition:color var(--tr);}
 .lp-nav-links a:hover{color:var(--t);}
@@ -333,7 +335,7 @@ a{color:inherit;text-decoration:none;}
 
 /* Hero */
 .lp-hero-wrap{position:relative;width:100%;overflow:hidden;line-height:0;}
-.lp-hero-img{width:100%;height:auto;display:block;max-height:660px;object-fit:cover;object-position:center top;}
+.lp-hero-img{width:100%;height:auto;display:block;}
 /* Buttons overlaid on desktop, shown below image on mobile */
 .lp-hero-btns{
   position:absolute;
@@ -686,6 +688,7 @@ a{color:inherit;text-decoration:none;}
   <!-- SIDEBAR -->
   <nav id="sidebar">
     <div class="sb-logo" onclick="logout()" style="cursor:pointer;" title="Home"><img src="/Images/Logo%20for%20whitebackground.png" alt="Betweena"></div>
+    <div class="sb-nav-scroll">
     <div class="sb-section">Menu</div>
     <div class="sb-item active" data-page="dashboard"><span class="icon">⊞</span>Dashboard</div>
     <div class="sb-item" data-page="transactions"><span class="icon">↔</span>Transactions<span class="sb-badge" id="active-badge" style="display:none">0</span></div>
@@ -697,6 +700,7 @@ a{color:inherit;text-decoration:none;}
     <div class="sb-item" data-page="notifications"><span class="icon">🔔</span>Notifications<span class="sb-badge" id="notif-badge" style="display:none">0</span></div>
     <div class="sb-item" data-page="disputes"><span class="icon">⚠️</span>Disputes<span class="sb-badge" id="dispute-badge" style="display:none;background:#D32F2F;">0</span></div>
     <div class="sb-item" data-page="profile"><span class="icon">👤</span>Profile</div>
+    </div>
     <div class="sb-bottom">
       <div class="sb-user">
         <div class="sb-avatar" id="sb-avatar">?</div>
